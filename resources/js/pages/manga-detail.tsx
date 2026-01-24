@@ -1,7 +1,11 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import Header from '../components/Header';
+import type { SharedData } from '../types';
 
 export default function MangaDetail({ id }: { id: string }) {
+    const { auth } = usePage<SharedData>().props;
+    const userName = auth.user?.name ?? 'Operator';
+
     return (
         <div className="min-h-screen bg-background-dark font-mono text-text-light antialiased selection:bg-primary selection:text-black">
             <Head title="One Piece" />
@@ -13,7 +17,10 @@ export default function MangaDetail({ id }: { id: string }) {
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
                     </Link>
-                    <h1 className="text-xs font-bold tracking-[0.2em] text-primary uppercase">Sys.Manga_ID: #{id || '8942'}</h1>
+                    <div className="flex flex-col items-center gap-1">
+                        <h1 className="text-xs font-bold tracking-[0.2em] text-primary uppercase">Sys.Manga_ID: #{id || '8942'}</h1>
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">{userName}</span>
+                    </div>
                     <button className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-colors hover:bg-border-dark hover:text-primary active:translate-y-0.5">
                         <span className="material-symbols-outlined">share</span>
                     </button>

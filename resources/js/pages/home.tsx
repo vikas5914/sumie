@@ -1,9 +1,13 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
+import type { SharedData } from '../types';
 
 export default function Home() {
+    const { auth } = usePage<SharedData>().props;
+    const userName = auth.user?.name ?? 'Operator';
+
     return (
         <AppLayout>
             <Head title="Home" />
@@ -21,7 +25,7 @@ export default function Home() {
                         ></div>
                         <div>
                             <p className="text-xs font-bold tracking-widest text-zinc-400 uppercase">WELCOME BACK</p>
-                            <p className="text-xl leading-tight font-bold text-primary">ALEX READER</p>
+                            <p className="text-xl leading-tight font-bold text-primary uppercase">{userName}</p>
                         </div>
                     </div>
                     <button className="relative flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-colors hover:bg-zinc-800">

@@ -1,8 +1,12 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
+import type { SharedData } from '../types';
 
 export default function Me() {
+    const { auth } = usePage<SharedData>().props;
+    const userName = auth.user?.name ?? 'Operator';
+
     return (
         <AppLayout>
             <Head title="Profile" />
@@ -30,7 +34,7 @@ export default function Me() {
                             </div>
                         </div>
                         <div className="flex-1 pt-1">
-                            <h1 className="mb-1 text-2xl leading-none font-bold tracking-tighter text-white uppercase">ALEX_READER</h1>
+                            <h1 className="mb-1 text-2xl leading-none font-bold tracking-tighter text-white uppercase">{userName}</h1>
                             <p className="mb-3 text-xs font-bold tracking-wide text-zinc-500 uppercase">MEMBER_ID: #8842-XJ</p>
                             <div className="flex gap-2">
                                 <span className="cursor-default border border-primary px-2 py-0.5 text-[10px] font-bold text-primary uppercase transition-colors hover:bg-primary hover:text-black">

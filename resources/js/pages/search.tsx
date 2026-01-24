@@ -1,9 +1,13 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
+import type { SharedData } from '../types';
 
 export default function Search() {
+    const { auth } = usePage<SharedData>().props;
+    const userName = auth.user?.name ?? 'Operator';
+
     return (
         <AppLayout>
             <Head title="Search" />
@@ -20,6 +24,7 @@ export default function Search() {
                         </button>
                     </div>
                 </div>
+                <p className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">Operator: {userName}</p>
                 <SearchInput />
                 <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
                     {['ALL', 'MANGA', 'MANHWA', 'COMPLETED', 'ONESHOT'].map((filter, index) => (

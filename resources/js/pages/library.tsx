@@ -1,8 +1,12 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
+import type { SharedData } from '../types';
 
 export default function Library() {
+    const { auth } = usePage<SharedData>().props;
+    const userName = auth.user?.name ?? 'Operator';
+
     return (
         <AppLayout>
             <Head title="Library" />
@@ -22,6 +26,7 @@ export default function Library() {
                         </button>
                     </div>
                 </div>
+                <p className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">Operator: {userName}</p>
                 <div className="no-scrollbar flex overflow-x-auto border-t border-border-dark bg-surface-dark">
                     <button className="border-r border-border-dark bg-primary px-6 py-3 text-xs font-bold text-black uppercase">Reading</button>
                     <button className="border-r border-border-dark px-6 py-3 text-xs font-bold text-zinc-500 uppercase transition-colors hover:bg-border-dark hover:text-white">

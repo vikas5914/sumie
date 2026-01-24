@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\OnboardingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('onboarding');
-})->name('onboarding');
+Route::get('/', [OnboardingController::class, 'show'])->name('onboarding');
+Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
 
 Route::get('/home', function () {
     return Inertia::render('home');

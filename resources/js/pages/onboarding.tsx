@@ -1,4 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
+import { store as onboardingStore } from '../routes/onboarding';
 
 export default function Onboarding() {
     return (
@@ -40,17 +41,40 @@ export default function Onboarding() {
                     </div>
 
                     <div className="z-10 p-8 pb-12">
-                        <Link
-                            href="/home"
-                            className="group relative flex h-14 w-full items-center justify-center bg-primary font-bold tracking-widest text-black uppercase shadow-[4px_4px_0_0_#333] transition-all hover:bg-white hover:shadow-[4px_4px_0_0_#fff] active:translate-y-0.5 active:shadow-none"
-                        >
-                            <span className="relative z-10 flex items-center gap-2">
-                                Initialize System
-                                <span className="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1">
-                                    arrow_forward
-                                </span>
-                            </span>
-                        </Link>
+                        <Form {...onboardingStore.form()} className="flex w-full flex-col gap-4">
+                            {({ processing, errors }) => (
+                                <>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase" htmlFor="name">
+                                            Operator Name
+                                        </label>
+                                        <input
+                                            id="name"
+                                            name="name"
+                                            autoComplete="name"
+                                            placeholder="Enter your call sign"
+                                            maxLength={30}
+                                            required
+                                            autoFocus
+                                            className="h-12 w-full border border-border-dark bg-surface-dark px-4 text-sm font-bold text-text-light uppercase outline-none transition-colors focus:border-primary focus:ring-0"
+                                        />
+                                        {errors.name && <p className="text-[10px] font-bold text-red-400 uppercase">{errors.name}</p>}
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="group relative flex h-14 w-full items-center justify-center bg-primary font-bold tracking-widest text-black uppercase shadow-[4px_4px_0_0_#333] transition-all hover:bg-white hover:shadow-[4px_4px_0_0_#fff] disabled:cursor-not-allowed disabled:opacity-80 active:translate-y-0.5 active:shadow-none"
+                                    >
+                                        <span className="relative z-10 flex items-center gap-2">
+                                            {processing ? 'Initializing...' : 'Initialize System'}
+                                            <span className="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1">
+                                                arrow_forward
+                                            </span>
+                                        </span>
+                                    </button>
+                                </>
+                            )}
+                        </Form>
                         <p className="mt-4 text-center text-[10px] font-bold text-zinc-600 uppercase">By entering you accept the protocol</p>
                     </div>
                 </div>
