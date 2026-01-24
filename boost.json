@@ -8,6 +8,8 @@
         "opencode",
         "vscode"
     ],
-    "guidelines": [],
+    "guidelines": [
+        "nativephp/mobile"
+    ],
     "herd_mcp": true
 }
