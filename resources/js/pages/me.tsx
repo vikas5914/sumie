@@ -104,8 +104,8 @@ export default function Me() {
                             </div>
                             <div className="group relative inline-flex cursor-pointer items-center">
                                 <input defaultChecked className="peer sr-only" type="checkbox" />
-                                <div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0">
-                                    <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500 transition-all duration-200 peer-checked:translate-x-5 peer-checked:bg-primary"></div>
+<div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0 peer-checked:[&>div]:translate-x-5 peer-checked:[&>div]:bg-primary">
+                                    <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500 transition-all duration-200"></div>
                                 </div>
                             </div>
                         </div>
@@ -115,8 +115,8 @@ export default function Me() {
                             </div>
                             <div className="group relative inline-flex cursor-pointer items-center">
                                 <input className="peer sr-only" type="checkbox" />
-                                <div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0">
-                                    <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500 transition-all duration-200 peer-checked:translate-x-5 peer-checked:bg-primary"></div>
+                                <div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0 [&>div]:transition-all [&>div]:duration-200 [&>div]:peer-checked:translate-x-5 [&>div]:peer-checked:bg-primary">
+                                    <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500"></div>
                                 </div>
                             </div>
                         </div>

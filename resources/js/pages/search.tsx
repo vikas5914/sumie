@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import Header from '../components/Header';
+import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
 
 export default function Search() {
@@ -19,21 +20,7 @@ export default function Search() {
                         </button>
                     </div>
                 </div>
-                <div className="group relative w-full">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="material-symbols-outlined text-zinc-600 transition-colors group-focus-within:text-primary">terminal</span>
-                    </div>
-                    <input
-                        className="block h-12 w-full border border-border-dark bg-surface-dark px-4 pl-10 text-sm font-bold text-text-light uppercase placeholder-zinc-600 transition-colors outline-none focus:border-primary focus:shadow-[4px_4px_0_0_#333]"
-                        placeholder="INPUT KEYWORDS..."
-                        type="text"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-                        <button className="flex size-8 items-center justify-center border border-zinc-700 bg-zinc-900 text-primary transition-colors hover:bg-primary hover:text-black">
-                            <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                        </button>
-                    </div>
-                </div>
+                <SearchInput />
                 <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
                     {['ALL', 'MANGA', 'MANHWA', 'COMPLETED', 'ONESHOT'].map((filter, index) => (
                         <button

@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import Header from '../components/Header';
+import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
 
 export default function Home() {
@@ -28,16 +29,7 @@ export default function Home() {
                         <span className="absolute top-2 right-2 size-2.5 border-2 border-surface-dark bg-primary"></span>
                     </button>
                 </div>
-                <div className="relative mt-4 w-full">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                        <span className="material-symbols-outlined text-xl text-zinc-500">search</span>
-                    </div>
-                    <input
-                        className="block w-full border border-border-dark bg-surface-dark py-3 pr-4 pl-11 text-sm text-text-light placeholder-zinc-500 shadow-none outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="SEARCH MANGA, AUTHORS, OR GENRES..."
-                        type="text"
-                    />
-                </div>
+                <SearchInput className="mt-4" />
             </Header>
 
             <main className="no-scrollbar flex flex-1 flex-col gap-6 overflow-y-auto pt-4 pb-6">
