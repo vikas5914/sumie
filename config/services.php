@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'mangadex' => [
+        'base_url' => env('MANGADEX_BASE_URL', 'https://api.mangadex.org'),
+        'cover_url' => env('MANGADEX_COVER_URL', 'https://uploads.mangadex.org/covers'),
+    ],
+
 ];

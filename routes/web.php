@@ -1,28 +1,35 @@
 <?php
 
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ImageProxyController;
+use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\MangaController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\UserMangaController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [OnboardingController::class, 'show'])->name('onboarding');
 Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
 
-Route::get('/home', function () {
-    return Inertia::render('home');
-})->name('home');
+// Image proxy route (public, no auth required for caching)
+Route::get('/images/proxy/{encodedUrl}', ImageProxyController::class)->name('image.proxy')->where('encodedUrl', '.*');
 
-Route::get('/search', function () {
-    return Inertia::render('search');
-})->name('search');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::post('/home/refresh', [HomeController::class, 'refresh'])->name('home.refresh');
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
+    Route::get('/library', [LibraryController::class, 'index'])->name('library');
+    Route::get('/manga/{id}', [MangaController::class, 'show'])->name('manga.show');
 
-Route::get('/library', function () {
-    return Inertia::render('library');
-})->name('library');
+    Route::get('/me', function () {
+        return Inertia::render('me');
+    })->name('me');
 
-Route::get('/me', function () {
-    return Inertia::render('me');
-})->name('me');
-
-Route::get('/manga/{id}', function ($id) {
-    return Inertia::render('manga-detail', ['id' => $id]);
-})->name('manga.show');
+    // Library management routes
+    Route::post('/library/manga/{mangaId}', [UserMangaController::class, 'store'])->name('library.store');
+    Route::patch('/library/{id}/status', [UserMangaController::class, 'updateStatus'])->name('library.update-status');
+    Route::patch('/library/{id}/favorite', [UserMangaController::class, 'toggleFavorite'])->name('library.toggle-favorite');
+    Route::delete('/library/{id}', [UserMangaController::class, 'destroy'])->name('library.destroy');
+});
