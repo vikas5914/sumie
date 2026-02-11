@@ -1,12 +1,49 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
+import { readImageProxyPreference, writeImageProxyPreference } from '../lib/image';
 import type { SharedData } from '../types';
 
 export default function Me() {
     const { auth } = usePage<SharedData>().props;
     const userName = auth.user?.name ?? 'Operator';
+    const [useImageProxy, setUseImageProxy] = useState(readImageProxyPreference(Boolean(auth.user?.use_image_proxy)));
+    const [isUpdatingImageProxy, setIsUpdatingImageProxy] = useState(false);
+
+    useEffect(() => {
+        const nextValue = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
+        setUseImageProxy(nextValue);
+        writeImageProxyPreference(nextValue);
+    }, [auth.user?.use_image_proxy]);
+
+    const updateImageProxyPreference = (nextValue: boolean): void => {
+        setUseImageProxy(nextValue);
+        writeImageProxyPreference(nextValue);
+
+        router.patch(
+            '/me/preferences/image-proxy',
+            {
+                use_image_proxy: nextValue,
+            },
+            {
+                async: true,
+                preserveScroll: true,
+                preserveState: true,
+                onStart: () => {
+                    setIsUpdatingImageProxy(true);
+                },
+                onError: () => {
+                    setUseImageProxy(!nextValue);
+                    writeImageProxyPreference(!nextValue);
+                },
+                onFinish: () => {
+                    setIsUpdatingImageProxy(false);
+                },
+            },
+        );
+    };
 
     return (
         <AppLayout>
@@ -124,6 +161,28 @@ export default function Me() {
                                     <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500"></div>
                                 </div>
                             </div>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-border-dark p-4">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-sm font-bold text-white uppercase">IMAGE_PROXY</span>
+                                <span className="text-[10px] text-zinc-500 uppercase">
+                                    {useImageProxy ? 'USING_PROXY_ENDPOINT' : 'USING_DIRECT_IMAGE_URLS'}
+                                </span>
+                            </div>
+                            <label className="group relative inline-flex cursor-pointer items-center">
+                                <input
+                                    checked={useImageProxy}
+                                    disabled={isUpdatingImageProxy}
+                                    className="peer sr-only"
+                                    type="checkbox"
+                                    onChange={(event) => {
+                                        updateImageProxyPreference(event.target.checked);
+                                    }}
+                                />
+                                <div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0 peer-disabled:opacity-60 peer-checked:[&>div]:translate-x-5 peer-checked:[&>div]:bg-primary">
+                                    <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500 transition-all duration-200"></div>
+                                </div>
+                            </label>
                         </div>
                         <button className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-zinc-800/50">
                             <div className="flex flex-col">

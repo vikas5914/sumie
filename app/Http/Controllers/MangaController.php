@@ -43,6 +43,7 @@ class MangaController extends Controller
         }
 
         $user = $request->user();
+        $useImageProxy = $user?->shouldUseImageProxy() ?? false;
 
         $userManga = null;
 
@@ -74,8 +75,8 @@ class MangaController extends Controller
                 'id' => $manga->id,
                 'title' => $manga->title,
                 'description' => $manga->description,
-                'cover_image_url' => $manga->getProxiedCoverUrl(),
-                'banner_image_url' => $manga->getProxiedBannerUrl(),
+                'cover_image_url' => $manga->getCoverImageUrl($useImageProxy),
+                'banner_image_url' => $manga->getBannerImageUrl($useImageProxy),
                 'author' => $manga->author,
                 'artist' => $manga->artist,
                 'status' => $manga->status,
@@ -253,12 +254,13 @@ class MangaController extends Controller
         $chapterTitle = isset($chapterData['title']) && is_string($chapterData['title']) && $chapterData['title'] !== ''
             ? $chapterData['title']
             : ($chapter->title ?: 'Chapter '.$chapter->chapter_number);
+        $useImageProxy = $user?->shouldUseImageProxy() ?? false;
 
         return Inertia::render('manga-reader', [
             'manga' => [
                 'id' => $manga->id,
                 'title' => $manga->title,
-                'cover_image_url' => $manga->getProxiedCoverUrl(),
+                'cover_image_url' => $manga->getCoverImageUrl($useImageProxy),
             ],
             'chapter' => [
                 'id' => (string) $chapterId,
@@ -271,7 +273,7 @@ class MangaController extends Controller
                 ->filter(fn (mixed $image): bool => is_array($image))
                 ->map(fn (array $image, int $index): array => [
                     'id' => $index + 1,
-                    'url' => (string) ($image['url'] ?? ''),
+                    'url' => $this->buildImageUrl((string) ($image['url'] ?? ''), $useImageProxy),
                     'width' => isset($image['width']) ? (int) $image['width'] : null,
                     'height' => isset($image['height']) ? (int) $image['height'] : null,
                 ])
@@ -289,5 +291,14 @@ class MangaController extends Controller
     private function isUpstreamNotFound(RuntimeException $exception): bool
     {
         return str_contains(strtolower($exception->getMessage()), 'not found');
+    }
+
+    private function buildImageUrl(string $imageUrl, bool $useImageProxy): string
+    {
+        if (! $useImageProxy) {
+            return $imageUrl;
+        }
+
+        return route('image.proxy', ['encodedUrl' => base64_encode($imageUrl)]);
     }
 }

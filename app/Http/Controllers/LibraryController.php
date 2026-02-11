@@ -11,6 +11,7 @@ class LibraryController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $useImageProxy = $user?->shouldUseImageProxy() ?? false;
         $status = $request->query('status', 'reading');
 
         // Validate status parameter
@@ -33,7 +34,7 @@ class LibraryController extends Controller
                     'manga' => [
                         'id' => $userManga->manga->id,
                         'title' => $userManga->manga->title,
-                        'cover_image_url' => $userManga->manga->getProxiedCoverUrl(),
+                        'cover_image_url' => $userManga->manga->getCoverImageUrl($useImageProxy),
                         'total_chapters' => $userManga->manga->total_chapters,
                     ],
                     'status' => $userManga->status,

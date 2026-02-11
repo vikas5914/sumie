@@ -4,6 +4,7 @@ import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
+import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
 
 interface Genre {
     id: number;
@@ -49,6 +50,7 @@ interface HomeProps {
         user: {
             name: string;
             avatar?: string;
+            use_image_proxy?: boolean;
         } | null;
     };
     homeFeed?: {
@@ -80,7 +82,13 @@ export default function Home() {
     const continueReading = homeFeed?.continueReading ?? [];
     const recommendations = homeFeed?.recommendations ?? [];
     const userName = auth.user?.name ?? 'Operator';
+    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
     const avatarUrl = auth.user?.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=22c55e&color=000`;
+    const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
+        const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
+
+        return resolvedImageUrl ? `url("${resolvedImageUrl}")` : 'none';
+    };
 
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [pullStartY, setPullStartY] = useState<number | null>(null);
@@ -234,7 +242,9 @@ export default function Home() {
                                         <div
                                             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
                                             style={{
-                                                backgroundImage: `url("${featuredManga.banner_image_url || featuredManga.cover_image_url}")`,
+                                                backgroundImage: buildBackgroundImage(
+                                                    featuredManga.banner_image_url || featuredManga.cover_image_url,
+                                                ),
                                             }}
                                         ></div>
                                         <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/60 to-transparent"></div>
@@ -277,7 +287,7 @@ export default function Home() {
                                                 <div
                                                     className="relative h-20 w-16 shrink-0 overflow-hidden border border-zinc-600 bg-cover bg-center"
                                                     style={{
-                                                        backgroundImage: `url("${item.cover_image_url}")`,
+                                                        backgroundImage: buildBackgroundImage(item.cover_image_url),
                                                     }}
                                                 ></div>
                                                 <div className="flex min-w-0 flex-1 flex-col justify-center">
@@ -330,7 +340,7 @@ export default function Home() {
                                                 <div
                                                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
                                                     style={{
-                                                        backgroundImage: `url("${manga.cover_image_url}")`,
+                                                        backgroundImage: buildBackgroundImage(manga.cover_image_url),
                                                     }}
                                                 ></div>
                                                 <div className="absolute top-2 right-2 flex items-center gap-1 border border-border-dark bg-background-dark/80 px-2 py-0.5 text-[10px] font-bold text-text-light">
@@ -377,7 +387,7 @@ export default function Home() {
                                                 <div
                                                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
                                                     style={{
-                                                        backgroundImage: `url("${manga.cover_image_url}")`,
+                                                        backgroundImage: buildBackgroundImage(manga.cover_image_url),
                                                     }}
                                                 ></div>
                                             </div>

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'use_image_proxy',
     ];
 
     /**
@@ -44,7 +45,13 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'use_image_proxy' => 'boolean',
         ];
+    }
+
+    public function shouldUseImageProxy(): bool
+    {
+        return (bool) $this->use_image_proxy;
     }
 
     public function library(): HasMany

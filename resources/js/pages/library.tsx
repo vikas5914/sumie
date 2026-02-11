@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
+import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
 
 interface Genre {
     id: number;
@@ -40,6 +41,7 @@ interface LibraryProps {
     auth: {
         user: {
             name: string;
+            use_image_proxy?: boolean;
         } | null;
     };
     libraryItems: LibraryItem[];
@@ -61,6 +63,12 @@ const statusOrder = ['reading', 'completed', 'on_hold', 'dropped', 'planned'];
 export default function Library() {
     const { auth, libraryItems, currentStatus, counts } = usePage<LibraryProps>().props;
     const userName = auth.user?.name ?? 'Operator';
+    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
+    const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
+        const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
+
+        return resolvedImageUrl ? `url("${resolvedImageUrl}")` : 'none';
+    };
 
     const unreadCount = (item: LibraryItem): number => {
         return Math.max(0, item.manga.total_chapters - item.current_chapter_number);
@@ -140,7 +148,7 @@ export default function Library() {
                                     <div
                                         className="absolute inset-0 bg-cover bg-center grayscale transition-all duration-300 group-hover:grayscale-0"
                                         style={{
-                                            backgroundImage: `url("${item.manga.cover_image_url}")`,
+                                            backgroundImage: buildBackgroundImage(item.manga.cover_image_url),
                                         }}
                                     ></div>
                                     {item.is_favorite && <div className="absolute -top-1 -left-1 z-10 h-2 w-2 bg-primary"></div>}

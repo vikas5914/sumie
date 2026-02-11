@@ -26,20 +26,21 @@ class HomeController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+        $useImageProxy = $user?->shouldUseImageProxy() ?? false;
 
         $lastFetchedAt = Cache::get(self::CACHE_KEY_LAST_FETCH);
         $isDataStale = $this->isCacheStale();
 
         return Inertia::render('home', [
-            'homeFeed' => Inertia::defer(function () use ($user): array {
-                $trendingManga = $this->getTrendingManga();
-                $continueReading = $this->getContinueReading($user);
+            'homeFeed' => Inertia::defer(function () use ($user, $useImageProxy): array {
+                $trendingManga = $this->getTrendingManga($useImageProxy);
+                $continueReading = $this->getContinueReading($user, $useImageProxy);
 
                 return [
                     'featuredManga' => $this->getFeaturedManga($trendingManga),
                     'trendingManga' => $trendingManga,
                     'continueReading' => $continueReading,
-                    'recommendations' => $this->getRecommendations($user, $continueReading),
+                    'recommendations' => $this->getRecommendations($user, $continueReading, $useImageProxy),
                 ];
             }, 'home-feed'),
             // Meta information for the frontend
@@ -192,16 +193,16 @@ class HomeController extends Controller
     /**
      * Get trending manga
      */
-    private function getTrendingManga(): array
+    private function getTrendingManga(bool $useImageProxy): array
     {
         return collect($this->getCachedTrendingManga())
             ->map(fn ($manga) => [
                 'id' => $manga['id'],
                 'title' => $manga['title'],
                 'description' => $manga['description'] ?? '',
-                'cover_image_url' => $this->getProxiedCoverUrl($manga['cover_image_url'] ?? null),
+                'cover_image_url' => $this->buildImageUrl($manga['cover_image_url'] ?? null, $useImageProxy),
                 'banner_image_url' => isset($manga['banner_image_url'])
-                    ? $this->getProxiedCoverUrl($manga['banner_image_url'])
+                    ? $this->buildImageUrl($manga['banner_image_url'], $useImageProxy)
                     : null,
                 'rating_average' => $manga['rating_average'] ?? null,
                 'total_chapters' => $manga['total_chapters'] ?? 0,
@@ -215,7 +216,7 @@ class HomeController extends Controller
     /**
      * Get continue reading section
      */
-    private function getContinueReading($user): array
+    private function getContinueReading($user, bool $useImageProxy): array
     {
         if (! $user) {
             return [];
@@ -230,7 +231,7 @@ class HomeController extends Controller
             ->map(fn ($userManga) => [
                 'id' => $userManga->manga->id,
                 'title' => $userManga->manga->title,
-                'cover_image_url' => $userManga->manga->getProxiedCoverUrl(),
+                'cover_image_url' => $userManga->manga->getCoverImageUrl($useImageProxy),
                 'genres' => $userManga->manga->genres,
                 'current_chapter' => $userManga->currentChapter?->chapter_number ?? 1,
                 'progress_percentage' => $userManga->progress_percentage,
@@ -242,7 +243,7 @@ class HomeController extends Controller
     /**
      * Get recommendations based on reading history
      */
-    private function getRecommendations($user, array $continueReading): array
+    private function getRecommendations($user, array $continueReading, bool $useImageProxy): array
     {
         if (! $user || empty($continueReading)) {
             return [];
@@ -270,21 +271,25 @@ class HomeController extends Controller
             ->map(fn ($manga) => [
                 'id' => $manga['id'],
                 'title' => $manga['title'],
-                'cover_image_url' => $this->getProxiedCoverUrl($manga['cover_image_url']),
+                'cover_image_url' => $this->buildImageUrl($manga['cover_image_url'] ?? null, $useImageProxy),
                 'genres' => $manga['genres'],
             ])
             ->toArray();
     }
 
     /**
-     * Generate proxied cover image URL
+     * Build image URL based on user preference.
      */
-    private function getProxiedCoverUrl(?string $coverUrl): ?string
+    private function buildImageUrl(?string $imageUrl, bool $useImageProxy): ?string
     {
-        if (! $coverUrl) {
+        if (! $imageUrl) {
             return null;
         }
 
-        return route('image.proxy', ['encodedUrl' => base64_encode($coverUrl)]);
+        if (! $useImageProxy) {
+            return $imageUrl;
+        }
+
+        return route('image.proxy', ['encodedUrl' => base64_encode($imageUrl)]);
     }
 }

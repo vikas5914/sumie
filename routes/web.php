@@ -7,6 +7,7 @@ use App\Http\Controllers\MangaController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserMangaController;
+use App\Http\Controllers\UserPreferenceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -34,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/me', function () {
         return Inertia::render('me');
     })->name('me');
+    Route::patch('/me/preferences/image-proxy', [UserPreferenceController::class, 'updateImageProxy'])->name('me.preferences.image-proxy');
 
     // Library management routes
     Route::post('/library/manga/{mangaId}', [UserMangaController::class, 'store'])->name('library.store')

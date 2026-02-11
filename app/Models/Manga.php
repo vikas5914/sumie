@@ -94,19 +94,27 @@ class Manga extends Model
         return $query->whereJsonContains('genres', $genre);
     }
 
-    public function getProxiedCoverUrl(): ?string
+    public function getCoverImageUrl(bool $useProxy = false): ?string
     {
         if (! $this->cover_image_url) {
             return null;
         }
 
+        if (! $useProxy) {
+            return $this->cover_image_url;
+        }
+
         return route('image.proxy', ['encodedUrl' => base64_encode($this->cover_image_url)]);
     }
 
-    public function getProxiedBannerUrl(): ?string
+    public function getBannerImageUrl(bool $useProxy = false): ?string
     {
         if (! $this->banner_image_url) {
             return null;
+        }
+
+        if (! $useProxy) {
+            return $this->banner_image_url;
         }
 
         return route('image.proxy', ['encodedUrl' => base64_encode($this->banner_image_url)]);

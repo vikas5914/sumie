@@ -14,6 +14,7 @@ class SearchController extends Controller
 
     public function index(Request $request, ComickApiService $comick): Response
     {
+        $useImageProxy = $request->user()?->shouldUseImageProxy() ?? false;
         $query = trim((string) $request->query('q', ''));
         $filter = strtolower(trim((string) $request->query('filter', 'all')));
         $filter = $filter === '' ? 'all' : $filter;
@@ -40,7 +41,7 @@ class SearchController extends Controller
                     ->map(fn (array $mangaData) => [
                         'id' => $mangaData['id'],
                         'title' => $mangaData['title'],
-                        'cover_image_url' => $this->getProxiedCoverUrl($mangaData['cover_image_url']),
+                        'cover_image_url' => $this->buildImageUrl($mangaData['cover_image_url'] ?? null, $useImageProxy),
                         'author' => $mangaData['author'],
                         'rating_average' => $mangaData['rating_average'],
                         'status' => $mangaData['status'],
@@ -59,13 +60,17 @@ class SearchController extends Controller
         ]);
     }
 
-    private function getProxiedCoverUrl(?string $coverUrl): ?string
+    private function buildImageUrl(?string $imageUrl, bool $useImageProxy): ?string
     {
-        if (! $coverUrl) {
+        if (! $imageUrl) {
             return null;
         }
 
-        return route('image.proxy', ['encodedUrl' => base64_encode($coverUrl)]);
+        if (! $useImageProxy) {
+            return $imageUrl;
+        }
+
+        return route('image.proxy', ['encodedUrl' => base64_encode($imageUrl)]);
     }
 
     /**

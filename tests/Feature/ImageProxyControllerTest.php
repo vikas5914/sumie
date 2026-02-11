@@ -1,18 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 it('proxies and caches an allowed legacy comick image url', function () {
     Storage::fake('public');
-
-    Config::set('services.image_proxy.allowed_hosts', [
-        'meo.comick.pictures',
-        '.comick.pictures',
-        'static.comix.to',
-        '.comix.to',
-    ]);
 
     Http::fake([
         'https://meo.comick.pictures/*' => Http::response('fake-image-binary', 200, [
@@ -40,13 +32,6 @@ it('proxies and caches an allowed legacy comick image url', function () {
 it('proxies and caches an allowed comix image url', function () {
     Storage::fake('public');
 
-    Config::set('services.image_proxy.allowed_hosts', [
-        'meo.comick.pictures',
-        '.comick.pictures',
-        'static.comix.to',
-        '.comix.to',
-    ]);
-
     Http::fake([
         'https://static.comix.to/*' => Http::response('fake-image-binary', 200, [
             'Content-Type' => 'image/jpeg',
@@ -62,16 +47,36 @@ it('proxies and caches an allowed comix image url', function () {
         ->assertHeader('X-Cache', 'MISS');
 });
 
-it('blocks urls from disallowed hosts', function () {
-    Config::set('services.image_proxy.allowed_hosts', [
-        'meo.comick.pictures',
-        '.comick.pictures',
-        'static.comix.to',
-        '.comix.to',
+it('proxies image urls from any http host', function () {
+    Storage::fake('public');
+
+    Http::fake([
+        'https://example.com/*' => Http::response('fake-image-binary', 200, [
+            'Content-Type' => 'image/jpeg',
+        ]),
     ]);
 
     $encoded = base64_encode('https://example.com/image.jpg');
 
     $this->get(route('image.proxy', ['encodedUrl' => $encoded]))
-        ->assertForbidden();
+        ->assertOk()
+        ->assertHeader('X-Cache', 'MISS');
+});
+
+it('proxies and caches an allowed wowpic image url', function () {
+    Storage::fake('public');
+
+    Http::fake([
+        'https://jdpw.wowpic4.store/*' => Http::response('fake-image-binary', 200, [
+            'Content-Type' => 'image/webp',
+        ]),
+    ]);
+
+    $encoded = base64_encode('https://jdpw.wowpic4.store/ii/example/001.webp');
+
+    $response = $this->get(route('image.proxy', ['encodedUrl' => $encoded]));
+
+    $response
+        ->assertOk()
+        ->assertHeader('X-Cache', 'MISS');
 });

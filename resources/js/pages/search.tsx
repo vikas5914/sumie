@@ -5,6 +5,7 @@ import FilterTabs from '../components/FilterTabs';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
+import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
 
 interface SearchResult {
     id: string; // Comick slug
@@ -20,6 +21,7 @@ interface SearchProps {
     auth: {
         user: {
             name: string;
+            use_image_proxy?: boolean;
         } | null;
     };
     query: string;
@@ -69,6 +71,12 @@ function buildSearchHref(query: string, filter: string): string {
 export default function Search() {
     const { auth, query, results, filter } = usePage<SearchProps>().props;
     const userName = auth.user?.name ?? 'Operator';
+    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
+    const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
+        const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
+
+        return resolvedImageUrl ? `url("${resolvedImageUrl}")` : 'none';
+    };
 
     const [isSearching, setIsSearching] = useState(false);
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -146,7 +154,7 @@ export default function Search() {
                                     <div
                                         className="absolute inset-0 bg-cover bg-center grayscale transition-all duration-300 group-hover:grayscale-0"
                                         style={{
-                                            backgroundImage: manga.cover_image_url ? `url("${manga.cover_image_url}")` : 'none',
+                                            backgroundImage: buildBackgroundImage(manga.cover_image_url),
                                         }}
                                     ></div>
                                     <div className="absolute top-2 left-2 flex items-center border border-black bg-primary px-1.5 py-0.5 text-[10px] leading-none font-bold text-black">

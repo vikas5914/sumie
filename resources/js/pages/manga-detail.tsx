@@ -2,6 +2,7 @@ import { Deferred, Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
+import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
 
 interface Genre {
     id: number;
@@ -51,6 +52,7 @@ interface MangaDetailProps {
     auth: {
         user: {
             name: string;
+            use_image_proxy?: boolean;
         } | null;
     };
     manga: Manga;
@@ -202,6 +204,12 @@ function ChapterListSkeleton() {
 export default function MangaDetail() {
     const { auth, manga, libraryStatus } = usePage<MangaDetailProps>().props;
     const userName = auth.user?.name ?? 'Operator';
+    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
+    const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
+        const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
+
+        return resolvedImageUrl ? `url("${resolvedImageUrl}")` : 'none';
+    };
     const descriptionHtml = useMemo(() => sanitizeDescriptionHtml(manga.description ?? ''), [manga.description]);
     const continueChapterId = libraryStatus?.current_chapter_id ?? manga.first_chapter_id;
     const startChapterId = manga.first_chapter_id;
@@ -233,7 +241,7 @@ export default function MangaDetail() {
                             <div
                                 className="absolute inset-0 bg-cover bg-center bg-no-repeat grayscale-[20%] filter transition-transform duration-500 group-hover:scale-105"
                                 style={{
-                                    backgroundImage: `url("${manga.cover_image_url}")`,
+                                    backgroundImage: buildBackgroundImage(manga.cover_image_url),
                                 }}
                             ></div>
                             <div className="absolute top-0 right-0 border-b border-l border-black bg-primary px-3 py-1 text-[10px] font-bold text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
