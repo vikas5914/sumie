@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import AppIcon from '../components/AppIcon';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { url } = usePage();
@@ -14,61 +15,61 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <div className="flex h-16 items-center justify-around border-t border-border-dark bg-background-dark/95 px-2 backdrop-blur-sm">
                         <Link
                             href="/home"
+                            prefetch
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/home') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
                         >
                             {isActive('/home') && <div className="absolute top-0 h-[2px] w-14 bg-primary shadow-[0_0_8px_rgba(76,255,0,0.8)]" />}
-                            <span
-                                className={`material-symbols-outlined text-[22px] ${!isActive('/home') && 'transition-transform group-hover:-translate-y-1'}`}
-                            >
-                                home
-                            </span>
+                            <AppIcon
+                                name="home"
+                                className={`text-[22px] ${!isActive('/home') && 'transition-transform group-hover:-translate-y-1'}`}
+                            />
                             <span className="text-[9px] font-bold tracking-wider uppercase">Home</span>
                         </Link>
 
                         <Link
                             href="/search"
+                            prefetch
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/search') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
                         >
                             {isActive('/search') && <div className="absolute top-0 h-[2px] w-14 bg-primary shadow-[0_0_8px_rgba(76,255,0,0.8)]" />}
-                            <span
-                                className={`material-symbols-outlined text-[22px] ${!isActive('/search') && 'transition-transform group-hover:-translate-y-1'}`}
-                            >
-                                manage_search
-                            </span>
+                            <AppIcon
+                                name="manage_search"
+                                className={`text-[22px] ${!isActive('/search') && 'transition-transform group-hover:-translate-y-1'}`}
+                            />
                             <span className="text-[9px] font-bold tracking-wider uppercase">Search</span>
                         </Link>
 
                         <Link
                             href="/library"
+                            prefetch
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/library') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
                         >
                             {isActive('/library') && <div className="absolute top-0 h-[2px] w-14 bg-primary shadow-[0_0_8px_rgba(76,255,0,0.8)]" />}
-                            <span
-                                className={`material-symbols-outlined text-[22px] ${!isActive('/library') && 'transition-transform group-hover:-translate-y-1'}`}
-                            >
-                                bookmarks
-                            </span>
+                            <AppIcon
+                                name="bookmarks"
+                                className={`text-[22px] ${!isActive('/library') && 'transition-transform group-hover:-translate-y-1'}`}
+                            />
                             <span className="text-[9px] font-bold tracking-wider uppercase">Lib</span>
                         </Link>
 
                         <Link
                             href="/me"
+                            prefetch
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/me') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
                         >
                             {isActive('/me') && <div className="absolute top-0 h-[2px] w-14 bg-primary shadow-[0_0_8px_rgba(76,255,0,0.8)]" />}
-                            <span
-                                className={`material-symbols-outlined text-[22px] ${!isActive('/me') && 'transition-transform group-hover:-translate-y-1'}`}
-                            >
-                                person
-                            </span>
+                            <AppIcon
+                                name="person"
+                                className={`text-[22px] ${!isActive('/me') && 'transition-transform group-hover:-translate-y-1'}`}
+                            />
                             <span className="text-[9px] font-bold tracking-wider uppercase">Me</span>
                         </Link>
                     </div>

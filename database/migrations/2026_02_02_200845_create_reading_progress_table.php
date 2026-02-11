@@ -15,15 +15,16 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('chapter_id')->constrained('chapters')->onDelete('cascade');
-            $table->foreignId('manga_id')->constrained('mangas')->onDelete('cascade');
+            $table->string('manga_id', 191);
             $table->integer('page_number')->default(1);
             $table->boolean('is_finished')->default(false);
             $table->decimal('read_percentage', 5, 2)->default(0.00);
-            $table->integer('duration_seconds')->nullable();
+            $table->integer('duration_seconds')->default(0);
             $table->timestamp('started_at')->nullable();
             $table->timestamp('finished_at')->nullable();
             $table->timestamps();
 
+            $table->foreign('manga_id')->references('id')->on('mangas')->onDelete('cascade');
             $table->unique(['user_id', 'chapter_id']);
             $table->index(['user_id', 'manga_id']);
             $table->index(['user_id', 'updated_at']);

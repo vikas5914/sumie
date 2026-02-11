@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import AppIcon from './AppIcon';
 
 interface SearchInputProps {
     className?: string;
@@ -90,6 +91,7 @@ export default function SearchInput({
             cancelTokenRef.current?.cancel();
 
             router.get(action, data, {
+                async: true,
                 replace: true,
                 preserveState: true,
                 preserveScroll: true,
@@ -159,7 +161,7 @@ export default function SearchInput({
             }}
         >
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                <span className="material-symbols-outlined text-xl text-zinc-500">search</span>
+                <AppIcon name="search" className="text-xl text-zinc-500" />
             </div>
 
             <input
@@ -173,7 +175,7 @@ export default function SearchInput({
             />
 
             <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2">
-                {isSearching && <span className="material-symbols-outlined animate-spin text-lg text-primary">progress_activity</span>}
+                {isSearching && <AppIcon name="progress_activity" className="animate-spin text-lg text-primary" />}
 
                 {value.trim().length > 0 && (
                     <button
@@ -186,7 +188,7 @@ export default function SearchInput({
                         }}
                         aria-label="Clear search"
                     >
-                        <span className="material-symbols-outlined text-lg">close</span>
+                        <AppIcon name="close" className="text-lg" />
                     </button>
                 )}
 
@@ -195,7 +197,7 @@ export default function SearchInput({
                     className="flex size-9 items-center justify-center border border-primary bg-primary text-black transition-transform active:translate-y-0.5"
                     aria-label="Submit search"
                 >
-                    <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                    <AppIcon name="arrow_forward" className="text-lg" />
                 </button>
             </div>
         </form>

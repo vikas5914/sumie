@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Chapter extends Model
 {
@@ -14,12 +15,13 @@ class Chapter extends Model
     protected $fillable = [
         'manga_id',
         'chapter_number',
+        'chapter_label',
         'volume_number',
         'title',
-        'description',
         'page_count',
         'release_date',
         'is_published',
+        'language',
         'source_url',
         'external_id',
     ];
@@ -38,8 +40,8 @@ class Chapter extends Model
         return $this->belongsTo(Manga::class);
     }
 
-    public function readingProgress(): BelongsTo
+    public function readingProgress(): HasMany
     {
-        return $this->belongsTo(ReadingProgress::class);
+        return $this->hasMany(ReadingProgress::class);
     }
 }

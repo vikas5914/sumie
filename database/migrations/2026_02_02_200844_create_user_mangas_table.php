@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_mangas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('manga_id')->constrained('mangas')->onDelete('cascade');
+            $table->string('manga_id', 191);
             $table->enum('status', ['reading', 'completed', 'on_hold', 'dropped', 'planned'])->default('reading');
             $table->foreignId('current_chapter_id')->nullable()->constrained('chapters')->onDelete('set null');
             $table->decimal('progress_percentage', 5, 2)->default(0.00);
@@ -27,6 +27,7 @@ return new class extends Migration
             $table->timestamp('last_read_at')->nullable();
             $table->timestamps();
 
+            $table->foreign('manga_id')->references('id')->on('mangas')->onDelete('cascade');
             $table->unique(['user_id', 'manga_id']);
             $table->index(['user_id', 'status']);
             $table->index(['user_id', 'is_favorite']);

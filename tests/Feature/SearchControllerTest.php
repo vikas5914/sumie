@@ -1,56 +1,49 @@
 <?php
 
-use App\Models\Manga;
 use App\Models\User;
-use App\Services\MangaDexApiService;
+use App\Services\ComickApiService;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\mock;
 
-it('applies filters to both title and author matches', function () {
+it('applies filters to search results from api', function () {
     $user = User::factory()->create();
 
-    $mangaDex = mock(MangaDexApiService::class);
+    $comick = mock(ComickApiService::class);
 
-    $mangaDex->shouldReceive('searchManga')->once()->andReturn(collect([
+    $comick->shouldReceive('searchManga')->once()->withArgs(function (array $filters): bool {
+        return $filters['title'] === 'Naruto'
+            && $filters['limit'] === 28
+            && $filters['showall'] === false
+            && $filters['genres_mode'] === 'and'
+            && ! array_key_exists('sort', $filters);
+    })->andReturn(collect([
         [
-            'id' => 'a',
+            'id' => 'abc12',
             'title' => 'Naruto',
             'author' => 'Someone Else',
             'status' => 'ongoing',
             'genres' => ['Action'],
-            'format_tags' => [],
-            'country_of_origin' => 'Japan',
+            'type' => 'manga',
             'rating_average' => 4.2,
             'cover_image_url' => null,
             'total_chapters' => 20,
+            'formats' => [],
         ],
         [
-            'id' => 'b',
+            'id' => 'def34',
             'title' => 'Anything',
             'author' => 'Naruto Author',
             'status' => 'completed',
             'genres' => ['Action'],
-            'format_tags' => [],
-            'country_of_origin' => 'Japan',
+            'type' => 'manga',
             'rating_average' => 4.8,
             'cover_image_url' => null,
             'total_chapters' => 1,
+            'formats' => ['Oneshot'],
         ],
     ]));
-
-    $completed = Manga::factory()->create([
-        'title' => 'Anything',
-        'author' => 'Naruto Author',
-        'status' => 'completed',
-    ]);
-
-    $mangaDex
-        ->shouldReceive('syncMangaToDatabase')
-        ->once()
-        ->withArgs(fn (array $data) => ($data['status'] ?? null) === 'completed')
-        ->andReturn($completed);
 
     $response = actingAs($user)->get(route('search', [
         'q' => 'Naruto',
@@ -65,36 +58,35 @@ it('applies filters to both title and author matches', function () {
             ->where('filter', 'completed')
             ->has('results', 1)
             ->where('results.0.status', 'completed')
+            ->where('results.0.id', 'def34')
         );
 });
 
-it('matches genres case-insensitively for exact tags', function () {
+it('returns all search results from api when no filter', function () {
     $user = User::factory()->create();
 
-    $mangaDex = mock(MangaDexApiService::class);
+    $comick = mock(ComickApiService::class);
 
-    $mangaDex->shouldReceive('searchManga')->once()->andReturn(collect([
+    $comick->shouldReceive('searchManga')->once()->withArgs(function (array $filters): bool {
+        return $filters['title'] === 'action'
+            && $filters['limit'] === 28
+            && $filters['showall'] === false
+            && $filters['genres_mode'] === 'and'
+            && ! array_key_exists('sort', $filters);
+    })->andReturn(collect([
         [
-            'id' => 'c',
+            'id' => 'action-story',
             'title' => 'Action Story',
             'author' => 'A',
             'status' => 'ongoing',
             'genres' => ['Action', 'Fantasy'],
-            'format_tags' => [],
-            'country_of_origin' => 'Japan',
+            'type' => 'manga',
             'rating_average' => 4.1,
             'cover_image_url' => null,
             'total_chapters' => 10,
+            'formats' => [],
         ],
     ]));
-
-    $synced = Manga::factory()->create([
-        'title' => 'Action Story',
-        'author' => 'A',
-        'genres' => ['Action', 'Fantasy'],
-    ]);
-
-    $mangaDex->shouldReceive('syncMangaToDatabase')->once()->andReturn($synced);
 
     $response = actingAs($user)->get(route('search', [
         'q' => 'action',
@@ -105,52 +97,87 @@ it('matches genres case-insensitively for exact tags', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('search')
             ->has('results', 1)
+            ->where('results.0.title', 'Action Story')
         );
 });
 
-it('supports oneshot filtering', function () {
+it('filters manga type using comix type field', function () {
     $user = User::factory()->create();
 
-    $mangaDex = mock(MangaDexApiService::class);
+    $comick = mock(ComickApiService::class);
 
-    $mangaDex->shouldReceive('searchManga')->once()->andReturn(collect([
+    $comick->shouldReceive('searchManga')->once()->andReturn(collect([
         [
-            'id' => 'd',
+            'id' => 'manga-id',
+            'title' => 'Manga Item',
+            'author' => 'A',
+            'status' => 'ongoing',
+            'genres' => ['Action'],
+            'type' => 'manga',
+            'rating_average' => 4.1,
+            'cover_image_url' => null,
+            'total_chapters' => 10,
+            'formats' => [],
+        ],
+        [
+            'id' => 'manhwa-id',
+            'title' => 'Manhwa Item',
+            'author' => 'B',
+            'status' => 'ongoing',
+            'genres' => ['Action'],
+            'type' => 'manhwa',
+            'rating_average' => 4.1,
+            'cover_image_url' => null,
+            'total_chapters' => 10,
+            'formats' => [],
+        ],
+    ]));
+
+    $response = actingAs($user)->get(route('search', [
+        'q' => 'action',
+        'filter' => 'manga',
+    ]));
+
+    $response
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('search')
+            ->has('results', 1)
+            ->where('results.0.id', 'manga-id')
+        );
+});
+
+it('supports oneshot filtering from formats', function () {
+    $user = User::factory()->create();
+
+    $comick = mock(ComickApiService::class);
+
+    $comick->shouldReceive('searchManga')->once()->andReturn(collect([
+        [
+            'id' => 'one-shot-example',
             'title' => 'One Shot Example',
             'author' => 'A',
             'status' => 'ongoing',
             'genres' => ['Drama'],
-            'format_tags' => ['Oneshot'],
-            'country_of_origin' => 'Japan',
+            'type' => 'manga',
             'rating_average' => 4.0,
             'cover_image_url' => null,
-            'total_chapters' => 1,
+            'total_chapters' => 12,
+            'formats' => ['Oneshot'],
         ],
         [
-            'id' => 'e',
+            'id' => 'one-shot-example-extended',
             'title' => 'One Shot Example Extended',
             'author' => 'B',
             'status' => 'ongoing',
             'genres' => ['Drama'],
-            'format_tags' => ['Adaptation'],
-            'country_of_origin' => 'Japan',
+            'type' => 'manga',
             'rating_average' => 4.0,
             'cover_image_url' => null,
             'total_chapters' => 12,
+            'formats' => ['Web Comic'],
         ],
     ]));
-
-    $synced = Manga::factory()->create([
-        'title' => 'One Shot Example',
-        'format_tags' => ['Oneshot'],
-        'total_chapters' => 1,
-    ]);
-
-    $mangaDex
-        ->shouldReceive('syncMangaToDatabase')
-        ->once()
-        ->withArgs(fn (array $data) => ($data['title'] ?? null) === 'One Shot Example')
-        ->andReturn($synced);
 
     $response = actingAs($user)->get(route('search', [
         'q' => 'One Shot',
@@ -164,5 +191,24 @@ it('supports oneshot filtering', function () {
             ->where('filter', 'oneshot')
             ->has('results', 1)
             ->where('results.0.title', 'One Shot Example')
+        );
+});
+
+it('returns empty results for short queries', function () {
+    $user = User::factory()->create();
+
+    $comick = mock(ComickApiService::class);
+
+    $comick->shouldNotReceive('searchManga');
+
+    $response = actingAs($user)->get(route('search', [
+        'q' => 'a',
+    ]));
+
+    $response
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('search')
+            ->has('results', 0)
         );
 });

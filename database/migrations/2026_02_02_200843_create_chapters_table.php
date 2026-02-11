@@ -13,20 +13,24 @@ return new class extends Migration
     {
         Schema::create('chapters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('manga_id')->constrained('mangas')->onDelete('cascade');
-            $table->decimal('chapter_number', 8, 2);
-            $table->integer('volume_number')->nullable();
+            $table->string('manga_id', 191);
+            $table->decimal('chapter_number', 10, 2)->default(0);
+            $table->string('chapter_label')->nullable();
+            $table->string('volume_number')->nullable();
             $table->string('title')->nullable();
-            $table->text('description')->nullable();
             $table->integer('page_count')->default(0);
             $table->timestamp('release_date')->nullable();
             $table->boolean('is_published')->default(true);
+            $table->string('language', 12)->default('en');
             $table->string('source_url')->nullable();
-            $table->string('external_id')->nullable()->index();
+            $table->string('external_id')->nullable();
             $table->timestamps();
 
+            $table->foreign('manga_id')->references('id')->on('mangas')->onDelete('cascade');
+            $table->unique(['manga_id', 'external_id']);
             $table->index(['manga_id', 'chapter_number']);
             $table->index(['manga_id', 'release_date']);
+            $table->index('external_id');
         });
     }
 

@@ -2,23 +2,24 @@
 
 namespace App\Console\Commands;
 
-use App\Services\MangaDexApiService;
+use App\Models\Manga;
+use App\Services\ComickApiService;
 use Illuminate\Console\Command;
 
-class SyncMangaDexTrending extends Command
+class SyncComickTrending extends Command
 {
-    protected $signature = 'mangadex:sync-trending 
+    protected $signature = 'comick:sync-trending
                             {--limit=10 : Number of trending manga to sync}
                             {--sync-chapters : Also sync chapter data}';
 
-    protected $description = 'Sync trending manga from MangaDex API to local database';
+    protected $description = 'Sync trending manga from Comix API to local database';
 
-    public function handle(MangaDexApiService $apiService): int
+    public function handle(ComickApiService $apiService): int
     {
         $limit = (int) $this->option('limit');
-        $syncChapters = $this->option('sync-chapters');
+        $syncChapters = (bool) $this->option('sync-chapters');
 
-        $this->info("Fetching {$limit} trending manga from MangaDex...");
+        $this->info("Fetching {$limit} trending manga from Comix...");
 
         try {
             $mangas = $apiService->getTrendingManga($limit);
@@ -43,20 +44,19 @@ class SyncMangaDexTrending extends Command
             $this->info('Sync completed successfully!');
 
             return self::SUCCESS;
-
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->error('Error syncing manga: '.$e->getMessage());
 
             return self::FAILURE;
         }
     }
 
-    private function syncChaptersForManga(MangaDexApiService $apiService, $manga): void
+    private function syncChaptersForManga(ComickApiService $apiService, Manga $manga): void
     {
         try {
-            $chapters = $apiService->getMangaFeed($manga->external_id, 10);
+            $chapters = $apiService->getMangaChaptersBySlug($manga->id);
             $apiService->syncChapters($manga, $chapters);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->warn("Failed to sync chapters for {$manga->title}: {$e->getMessage()}");
         }
     }

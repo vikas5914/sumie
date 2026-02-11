@@ -1,15 +1,17 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
+import AppIcon from '../components/AppIcon';
+import FilterTabs from '../components/FilterTabs';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
 
 interface SearchResult {
-    id: number;
+    id: string; // Comick slug
     title: string;
     cover_image_url: string | null;
     author: string | null;
-    rating_average: number | string | null;
+    rating_average: number | null;
     status: string;
     genres: string[];
 }
@@ -96,7 +98,7 @@ export default function Search() {
                     </h1>
                     <div className="flex gap-2">
                         <button className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-all hover:border-primary hover:bg-primary hover:text-black active:translate-y-0.5">
-                            <span className="material-symbols-outlined text-xl">tune</span>
+                            <AppIcon name="tune" className="text-xl" />
                         </button>
                     </div>
                 </div>
@@ -108,26 +110,7 @@ export default function Search() {
                     only={['query', 'results', 'filter']}
                     onSearchingChange={setIsSearching}
                 />
-                <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-                    {filters.map((f) => {
-                        const isActive = activeFilter === f.value;
-                        return (
-                            <Link
-                                key={f.value}
-                                href={buildSearchHref(query, f.value)}
-                                preserveState
-                                replace
-                                className={`h-8 shrink-0 border px-4 text-xs font-bold whitespace-nowrap uppercase transition-colors ${
-                                    isActive
-                                        ? 'border-primary bg-primary text-black shadow-[2px_2px_0_0_rgba(255,255,255,0.2)]'
-                                        : 'border-border-dark bg-transparent text-zinc-400 hover:border-primary hover:text-primary'
-                                }`}
-                            >
-                                {f.label}
-                            </Link>
-                        );
-                    })}
-                </div>
+                <FilterTabs filters={filters} activeFilter={activeFilter} getHref={(value: string) => buildSearchHref(query, value)} />
             </Header>
 
             <main className="no-scrollbar flex-1 overflow-y-auto bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTAgNDBoNDBWMEgwdi4yaDQwdjM5LjhIMHoiIGZpbGw9IiMzMzMiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] pb-6">
@@ -158,7 +141,7 @@ export default function Search() {
                 {results.length > 0 ? (
                     <section className="grid grid-cols-2 gap-4 p-4">
                         {results.map((manga) => (
-                            <Link key={manga.id} href={`/manga/${manga.id}`} className="group flex cursor-pointer flex-col gap-2">
+                            <Link key={manga.id} href={`/manga/${manga.id}`} prefetch className="group flex cursor-pointer flex-col gap-2">
                                 <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-surface-dark">
                                     <div
                                         className="absolute inset-0 bg-cover bg-center grayscale transition-all duration-300 group-hover:grayscale-0"
@@ -166,10 +149,8 @@ export default function Search() {
                                             backgroundImage: manga.cover_image_url ? `url("${manga.cover_image_url}")` : 'none',
                                         }}
                                     ></div>
-                                    <div className="absolute top-2 left-2 border border-black bg-primary px-1.5 py-0.5 text-[10px] font-bold text-black">
-                                        {typeof manga.rating_average === 'number'
-                                            ? `${(manga.rating_average * 20).toFixed(0)}% MATCH`
-                                            : `${(Number(manga.rating_average || 0) * 20).toFixed(0)}% MATCH`}
+                                    <div className="absolute top-2 left-2 flex items-center border border-black bg-primary px-1.5 py-0.5 text-[10px] leading-none font-bold text-black">
+                                        {`${((manga.rating_average ?? 0) * 20).toFixed(0)}% MATCH`}
                                     </div>
                                 </div>
                                 <div>
@@ -182,7 +163,7 @@ export default function Search() {
                 ) : (
                     <div className="flex flex-1 flex-col items-center justify-center p-8">
                         <div className="border border-border-dark bg-surface-dark p-8 text-center">
-                            <span className="material-symbols-outlined mb-4 block text-4xl text-zinc-600">search</span>
+                            <AppIcon name="search" className="mb-4 block text-4xl text-zinc-600" />
                             {query ? (
                                 <>
                                     <p className="mb-2 text-sm font-bold text-zinc-400 uppercase">No Results Found</p>
@@ -206,6 +187,7 @@ export default function Search() {
                                                                 '/search',
                                                                 { q },
                                                                 {
+                                                                    async: true,
                                                                     replace: true,
                                                                     preserveState: true,
                                                                     preserveScroll: true,
@@ -213,7 +195,7 @@ export default function Search() {
                                                                 },
                                                             )
                                                         }
-                                                        className="border border-border-dark bg-background-dark px-3 py-2 text-xs font-bold text-zinc-300 uppercase transition-colors hover:border-primary hover:text-primary"
+                                                        className="inline-flex items-center justify-center border border-border-dark bg-background-dark px-3 py-2 text-xs leading-none font-bold text-zinc-300 uppercase transition-colors hover:border-primary hover:text-primary"
                                                     >
                                                         {q}
                                                     </button>

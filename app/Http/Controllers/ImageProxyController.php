@@ -18,7 +18,7 @@ class ImageProxyController extends Controller
     private const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     /**
-     * Proxy and cache an image from MangaDex
+     * Proxy and cache an allowed remote image.
      */
     public function __invoke(Request $request, string $encodedUrl): Response
     {
@@ -28,8 +28,7 @@ class ImageProxyController extends Controller
             abort(400, 'Invalid image URL');
         }
 
-        // Validate URL is from MangaDex
-        if (! $this->isValidMangaDexUrl($url)) {
+        if (! $this->isAllowedImageUrl($url)) {
             abort(403, 'Invalid image URL');
         }
 
@@ -105,20 +104,14 @@ class ImageProxyController extends Controller
     }
 
     /**
-     * Validate that URL is from allowed MangaDex domains
+     * Validate that URL is from allowed image domains.
      */
-    private function isValidMangaDexUrl(string $url): bool
+    private function isAllowedImageUrl(string $url): bool
     {
         $scheme = parse_url($url, PHP_URL_SCHEME);
         if (! in_array($scheme, ['http', 'https'], true)) {
             return false;
         }
-
-        $allowedHosts = [
-            'uploads.mangadex.org',
-            'uploads.mangadex.network',
-            'mangadex.org',
-        ];
 
         $host = parse_url($url, PHP_URL_HOST);
 
@@ -126,7 +119,22 @@ class ImageProxyController extends Controller
             return false;
         }
 
-        return in_array($host, $allowedHosts, true);
+        $allowedHosts = config('services.image_proxy.allowed_hosts', []);
+        if (! is_array($allowedHosts) || $allowedHosts === []) {
+            return false;
+        }
+
+        return collect($allowedHosts)->contains(function (mixed $allowedHost) use ($host): bool {
+            if (! is_string($allowedHost) || $allowedHost === '') {
+                return false;
+            }
+
+            if (str_starts_with($allowedHost, '.')) {
+                return str_ends_with($host, $allowedHost);
+            }
+
+            return $host === $allowedHost;
+        });
     }
 
     /**

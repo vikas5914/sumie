@@ -2,56 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Manga;
 use App\Models\UserManga;
-use App\Services\MangaDexApiService;
+use App\Services\ComickApiService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class HomeController extends Controller
 {
-    private const CACHE_STALE_MINUTES = 60; // Data is stale after 1 hour
+    private const CACHE_TTL_MINUTES = 60; // Cache for 1 hour
+
+    private const CACHE_KEY_TRENDING = 'home:trending_manga';
+
+    private const CACHE_KEY_LAST_FETCH = 'home:last_fetched_at';
 
     public function __construct(
-        private MangaDexApiService $mangaDexApi
+        private ComickApiService $comickApi
     ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $user = $request->user();
 
-        // Check if we have any manga data with cover images
-        $hasCachedData = Manga::whereNotNull('cover_image_url')->exists();
-        $isDataStale = $this->isDataStale();
-
-        // If no cached data at all, we need to fetch immediately (blocking)
-        if (! $hasCachedData) {
-            try {
-                $this->fetchFreshData();
-            } catch (\Exception $e) {
-                Log::error('Failed to fetch initial manga data: '.$e->getMessage());
-            }
-        }
-
-        // Get cached data (either fresh from above or previously cached)
-        $featuredManga = $this->getFeaturedManga();
-        $trendingManga = $this->getTrendingManga();
-        $continueReading = $this->getContinueReading($user);
-        $recommendations = $this->getRecommendations($user, $continueReading);
+        $lastFetchedAt = Cache::get(self::CACHE_KEY_LAST_FETCH);
+        $isDataStale = $this->isCacheStale();
 
         return Inertia::render('home', [
-            'featuredManga' => $featuredManga,
-            'trendingManga' => $trendingManga,
-            'continueReading' => $continueReading,
-            'recommendations' => $recommendations,
+            'homeFeed' => Inertia::defer(function () use ($user): array {
+                $trendingManga = $this->getTrendingManga();
+                $continueReading = $this->getContinueReading($user);
+
+                return [
+                    'featuredManga' => $this->getFeaturedManga($trendingManga),
+                    'trendingManga' => $trendingManga,
+                    'continueReading' => $continueReading,
+                    'recommendations' => $this->getRecommendations($user, $continueReading),
+                ];
+            }, 'home-feed'),
             // Meta information for the frontend
             'meta' => [
                 'isDataStale' => $isDataStale,
-                'hasCachedData' => $hasCachedData,
-                'lastFetchedAt' => Manga::whereNotNull('last_fetched_at')
-                    ->latest('last_fetched_at')
-                    ->value('last_fetched_at'),
+                'hasCachedData' => $this->hasTrendingCache(),
+                'lastFetchedAt' => $lastFetchedAt,
             ],
         ]);
     }
@@ -59,10 +54,10 @@ class HomeController extends Controller
     /**
      * Background refresh endpoint - called by frontend when data is stale
      */
-    public function refresh(Request $request)
+    public function refresh(Request $request): JsonResponse
     {
         try {
-            $this->fetchFreshData();
+            $this->fetchAndCacheFreshData();
 
             return response()->json([
                 'success' => true,
@@ -83,43 +78,99 @@ class HomeController extends Controller
     }
 
     /**
-     * Check if cached data is stale (older than CACHE_STALE_MINUTES)
+     * Check if cached data is stale (older than CACHE_TTL_MINUTES)
      */
-    private function isDataStale(): bool
+    private function isCacheStale(): bool
     {
-        $lastFetch = Manga::whereNotNull('last_fetched_at')
-            ->latest('last_fetched_at')
-            ->value('last_fetched_at');
+        $lastFetch = Cache::get(self::CACHE_KEY_LAST_FETCH);
 
         if (! $lastFetch) {
             return true;
         }
 
-        return $lastFetch->diffInMinutes(now()) > self::CACHE_STALE_MINUTES;
+        return $lastFetch->diffInMinutes(now()) > self::CACHE_TTL_MINUTES;
+    }
+
+    private function hasTrendingCache(): bool
+    {
+        $cachedTrending = Cache::get(self::CACHE_KEY_TRENDING);
+
+        return is_array($cachedTrending) && ! empty($cachedTrending);
     }
 
     /**
-     * Fetch fresh data from MangaDex API
+     * Get cached trending manga or fetch fresh data
      */
-    private function fetchFreshData(): void
+    private function getCachedTrendingManga(): array
     {
-        // Fetch trending manga
-        $mangas = $this->mangaDexApi->getTrendingManga(12);
+        $cached = Cache::get(self::CACHE_KEY_TRENDING);
 
-        foreach ($mangas as $mangaData) {
-            $this->mangaDexApi->syncMangaToDatabase($mangaData);
+        if (! empty($cached)) {
+            return $cached;
         }
 
-        Log::info('Fetched '.$mangas->count().' manga from MangaDex');
+        // If no cache, fetch and cache fresh data
+        try {
+            $this->fetchAndCacheFreshData();
+
+            return Cache::get(self::CACHE_KEY_TRENDING) ?? [];
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch trending manga: '.$e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Fetch fresh data from Comix API and cache it
+     */
+    private function fetchAndCacheFreshData(): void
+    {
+        // Fetch trending manga
+        $mangas = $this->comickApi->getTrendingManga(12);
+
+        $cachedData = $mangas->map(fn ($mangaData) => [
+            'id' => $mangaData['id'],
+            'slug' => $mangaData['slug'] ?? null,
+            'title' => $mangaData['title'],
+            'description' => $mangaData['description'] ?? '',
+            'cover_image_url' => $mangaData['cover_image_url'] ?? null,
+            'banner_image_url' => $mangaData['banner_image_url'] ?? null,
+            'author' => $mangaData['author'] ?? null,
+            'artist' => $mangaData['artist'] ?? null,
+            'type' => $mangaData['type'] ?? null,
+            'status' => $mangaData['status'] ?? 'unknown',
+            'content_rating' => $mangaData['content_rating'] ?? 'safe',
+            'is_nsfw' => $mangaData['is_nsfw'] ?? false,
+            'genres' => $mangaData['genres'] ?? [],
+            'themes' => $mangaData['themes'] ?? [],
+            'demographics' => $mangaData['demographics'] ?? [],
+            'formats' => $mangaData['formats'] ?? [],
+            'release_year' => $mangaData['release_year'] ?? null,
+            'rating_average' => $mangaData['rating_average'] ?? null,
+            'rating_count' => $mangaData['rating_count'] ?? 0,
+            'total_chapters' => $mangaData['total_chapters'] ?? 0,
+            'links' => $mangaData['links'] ?? [],
+        ])->toArray();
+
+        Cache::put(self::CACHE_KEY_TRENDING, $cachedData, now()->addMinutes(self::CACHE_TTL_MINUTES));
+        Cache::put(self::CACHE_KEY_LAST_FETCH, now(), now()->addMinutes(self::CACHE_TTL_MINUTES));
+
+        Log::info('Fetched and cached '.$mangas->count().' manga from Comix');
     }
 
     /**
      * Get featured manga for hero section
      */
-    private function getFeaturedManga(): ?array
+    private function getFeaturedManga(array $trendingManga): ?array
     {
-        $featured = Manga::whereNotNull('cover_image_url')
-            ->orderBy('rating_average', 'desc')
+        if (empty($trendingManga)) {
+            return null;
+        }
+
+        // Get highest rated manga from trending as featured
+        $featured = collect($trendingManga)
+            ->sortByDesc('rating_average')
             ->first();
 
         if (! $featured) {
@@ -127,14 +178,14 @@ class HomeController extends Controller
         }
 
         return [
-            'id' => $featured->id,
-            'title' => $featured->title,
-            'description' => $featured->description,
-            'cover_image_url' => $featured->getProxiedCoverUrl(),
-            'banner_image_url' => $featured->getProxiedBannerUrl(),
-            'rating_average' => $featured->rating_average,
-            'total_chapters' => $featured->total_chapters,
-            'genres' => $featured->genres,
+            'id' => $featured['id'],
+            'title' => $featured['title'],
+            'description' => $featured['description'] ?? '',
+            'cover_image_url' => $featured['cover_image_url'] ?? null,
+            'banner_image_url' => $featured['banner_image_url'] ?? null,
+            'rating_average' => $featured['rating_average'] ?? null,
+            'total_chapters' => $featured['total_chapters'] ?? 0,
+            'genres' => $featured['genres'] ?? [],
         ];
     }
 
@@ -143,21 +194,22 @@ class HomeController extends Controller
      */
     private function getTrendingManga(): array
     {
-        // Get trending manga with cover images
-        $mangas = Manga::whereNotNull('cover_image_url')
-            ->where('status', '!=', 'cancelled')
-            ->orderBy('view_count', 'desc')
-            ->take(6)
-            ->get();
-
-        return $mangas->map(fn ($manga) => [
-            'id' => $manga->id,
-            'title' => $manga->title,
-            'cover_image_url' => $manga->getProxiedCoverUrl(),
-            'rating_average' => $manga->rating_average,
-            'genres' => $manga->genres,
-            'status' => $manga->status,
-        ])->toArray();
+        return collect($this->getCachedTrendingManga())
+            ->map(fn ($manga) => [
+                'id' => $manga['id'],
+                'title' => $manga['title'],
+                'description' => $manga['description'] ?? '',
+                'cover_image_url' => $this->getProxiedCoverUrl($manga['cover_image_url'] ?? null),
+                'banner_image_url' => isset($manga['banner_image_url'])
+                    ? $this->getProxiedCoverUrl($manga['banner_image_url'])
+                    : null,
+                'rating_average' => $manga['rating_average'] ?? null,
+                'total_chapters' => $manga['total_chapters'] ?? 0,
+                'genres' => $manga['genres'] ?? [],
+                'status' => $manga['status'] ?? 'unknown',
+            ])
+            ->values()
+            ->toArray();
     }
 
     /**
@@ -179,6 +231,7 @@ class HomeController extends Controller
                 'id' => $userManga->manga->id,
                 'title' => $userManga->manga->title,
                 'cover_image_url' => $userManga->manga->getProxiedCoverUrl(),
+                'genres' => $userManga->manga->genres,
                 'current_chapter' => $userManga->currentChapter?->chapter_number ?? 1,
                 'progress_percentage' => $userManga->progress_percentage,
                 'last_read_at' => $userManga->last_read_at?->diffForHumans(),
@@ -196,27 +249,42 @@ class HomeController extends Controller
         }
 
         $userGenres = collect($continueReading)
-            ->pluck('manga.genres')
+            ->pluck('genres')
             ->flatten()
             ->unique()
             ->take(3);
 
         $excludedIds = collect($continueReading)->pluck('id');
 
-        return Manga::whereNotIn('id', $excludedIds)
-            ->where(function ($query) use ($userGenres) {
-                foreach ($userGenres as $genre) {
-                    $query->orWhereJsonContains('genres', $genre);
-                }
+        // Get recommendations from cached trending data
+        $trending = $this->getCachedTrendingManga();
+
+        return collect($trending)
+            ->reject(fn ($manga) => $excludedIds->contains($manga['id']))
+            ->filter(function ($manga) use ($userGenres) {
+                $mangaGenres = collect($manga['genres'] ?? []);
+
+                return $mangaGenres->intersect($userGenres)->isNotEmpty();
             })
             ->take(3)
-            ->get()
             ->map(fn ($manga) => [
-                'id' => $manga->id,
-                'title' => $manga->title,
-                'cover_image_url' => $manga->getProxiedCoverUrl(),
-                'genres' => $manga->genres,
+                'id' => $manga['id'],
+                'title' => $manga['title'],
+                'cover_image_url' => $this->getProxiedCoverUrl($manga['cover_image_url']),
+                'genres' => $manga['genres'],
             ])
             ->toArray();
+    }
+
+    /**
+     * Generate proxied cover image URL
+     */
+    private function getProxiedCoverUrl(?string $coverUrl): ?string
+    {
+        if (! $coverUrl) {
+            return null;
+        }
+
+        return route('image.proxy', ['encodedUrl' => base64_encode($coverUrl)]);
     }
 }

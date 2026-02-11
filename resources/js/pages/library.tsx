@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
 
@@ -8,7 +9,7 @@ interface Genre {
 }
 
 interface Manga {
-    id: number;
+    id: string; // Comick slug
     title: string;
     cover_image_url: string;
     rating_average: number;
@@ -57,19 +58,6 @@ const statusLabels: Record<string, string> = {
 
 const statusOrder = ['reading', 'completed', 'on_hold', 'dropped', 'planned'];
 
-function timeAgo(dateString: string | null): string {
-    if (!dateString) return 'Never';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 30) return `${diffInDays}d ago`;
-    return `${Math.floor(diffInDays / 30)}mo ago`;
-}
-
 export default function Library() {
     const { auth, libraryItems, currentStatus, counts } = usePage<LibraryProps>().props;
     const userName = auth.user?.name ?? 'Operator';
@@ -91,12 +79,13 @@ export default function Library() {
                     <div className="flex gap-2">
                         <Link
                             href="/search"
+                            prefetch
                             className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-all hover:bg-primary hover:text-black"
                         >
-                            <span className="material-symbols-outlined text-[20px]">search</span>
+                            <AppIcon name="search" className="text-[20px]" />
                         </Link>
                         <button className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-all hover:bg-primary hover:text-black">
-                            <span className="material-symbols-outlined text-[20px]">tune</span>
+                            <AppIcon name="tune" className="text-[20px]" />
                         </button>
                     </div>
                 </div>
@@ -109,6 +98,11 @@ export default function Library() {
                             <Link
                                 key={status}
                                 href={`/library?status=${status}`}
+                                prefetch
+                                only={['libraryItems', 'currentStatus', 'counts']}
+                                preserveScroll
+                                preserveState
+                                replace
                                 className={`border-r border-border-dark px-6 py-3 text-xs font-bold whitespace-nowrap uppercase transition-colors ${
                                     isActive ? 'bg-primary text-black' : 'text-zinc-500 hover:bg-border-dark hover:text-white'
                                 }`}
@@ -125,10 +119,10 @@ export default function Library() {
                     <span>{libraryItems.length} ITEMS</span>
                     <div className="flex items-center gap-4">
                         <button className="flex items-center gap-1 hover:text-primary">
-                            LAST READ <span className="material-symbols-outlined text-[14px]">arrow_drop_down</span>
+                            LAST READ <AppIcon name="arrow_drop_down" className="text-[14px]" />
                         </button>
                         <button className="hover:text-primary">
-                            <span className="material-symbols-outlined text-[18px]">grid_view</span>
+                            <AppIcon name="grid_view" className="text-[18px]" />
                         </button>
                     </div>
                 </div>
@@ -139,6 +133,7 @@ export default function Library() {
                             <Link
                                 key={item.id}
                                 href={`/manga/${item.manga.id}`}
+                                prefetch
                                 className="group relative flex gap-4 border-b border-border-dark p-4 transition-colors hover:bg-surface-dark"
                             >
                                 <div className="relative aspect-[2/3] w-20 shrink-0 border border-border-dark bg-surface-dark">
@@ -157,7 +152,7 @@ export default function Library() {
                                                 {item.manga.title}
                                             </h3>
                                             <button className="text-zinc-500 hover:text-primary">
-                                                <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                                                <AppIcon name="more_vert" className="text-[20px]" />
                                             </button>
                                         </div>
                                         <p className="text-xs text-zinc-500 uppercase">
@@ -183,9 +178,7 @@ export default function Library() {
                                             </div>
                                         </div>
                                         <button className="border border-border-dark bg-border-dark p-2 text-text-light transition-all hover:bg-primary hover:text-black">
-                                            <span className="material-symbols-outlined block text-[18px]">
-                                                {item.progress_percentage === 100 ? 'check' : 'play_arrow'}
-                                            </span>
+                                            <AppIcon name={item.progress_percentage === 100 ? 'check' : 'play_arrow'} className="block text-[18px]" />
                                         </button>
                                     </div>
                                 </div>
@@ -195,14 +188,15 @@ export default function Library() {
                 ) : (
                     <div className="flex flex-1 flex-col items-center justify-center p-8">
                         <div className="border border-border-dark bg-surface-dark p-8 text-center">
-                            <span className="material-symbols-outlined mb-4 block text-4xl text-zinc-600">menu_book</span>
+                            <AppIcon name="menu_book" className="mb-4 block text-4xl text-zinc-600" />
                             <p className="mb-2 text-sm font-bold text-zinc-400 uppercase">No {statusLabels[currentStatus]} Items</p>
                             <p className="mb-4 text-xs text-zinc-500">Start adding manga to your library</p>
                             <Link
                                 href="/search"
+                                prefetch
                                 className="inline-flex items-center gap-2 border border-primary bg-primary px-4 py-2 text-xs font-bold text-black uppercase transition-all hover:bg-white"
                             >
-                                <span className="material-symbols-outlined text-sm">search</span>
+                                <AppIcon name="search" className="text-sm" />
                                 Browse Manga
                             </Link>
                         </div>

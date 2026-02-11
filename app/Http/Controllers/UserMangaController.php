@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class UserMangaController extends Controller
 {
-    public function store(Request $request, int $mangaId): RedirectResponse
+    public function store(Request $request, string $mangaId): RedirectResponse
     {
         $user = $request->user();
         $manga = Manga::findOrFail($mangaId);

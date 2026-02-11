@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
+import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
 import type { SharedData } from '../types';
@@ -64,7 +65,7 @@ export default function Me() {
             <main className="no-scrollbar flex flex-1 flex-col gap-8 overflow-y-auto px-4 pt-4 pb-8">
                 <section>
                     <div className="mb-3 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sm text-primary">terminal</span>
+                        <AppIcon name="terminal" className="text-sm text-primary" />
                         <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">ACCOUNT_CONFIGURATION</h2>
                     </div>
                     <div className="border border-border-dark bg-surface-dark">
@@ -75,7 +76,7 @@ export default function Me() {
                                 </span>
                                 <span className="text-[10px] text-zinc-500 uppercase">AVATAR, BIO, USERNAME</span>
                             </div>
-                            <span className="material-symbols-outlined text-zinc-600 transition-colors group-hover:text-primary">chevron_right</span>
+                            <AppIcon name="chevron_right" className="text-zinc-600 transition-colors group-hover:text-primary" />
                         </button>
                         <button className="group flex w-full items-center justify-between border-b border-border-dark p-4 text-left transition-colors hover:bg-zinc-800/50">
                             <div className="flex flex-col">
@@ -84,21 +85,21 @@ export default function Me() {
                                 </span>
                                 <span className="text-[10px] text-primary uppercase">PLAN: ANIME_GOD_TIER</span>
                             </div>
-                            <span className="material-symbols-outlined text-zinc-600 transition-colors group-hover:text-primary">chevron_right</span>
+                            <AppIcon name="chevron_right" className="text-zinc-600 transition-colors group-hover:text-primary" />
                         </button>
                         <button className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-zinc-800/50">
                             <div className="flex flex-col">
                                 <span className="text-sm font-bold text-white uppercase transition-colors group-hover:text-primary">SECURITY</span>
                                 <span className="text-[10px] text-zinc-500 uppercase">PASSWORD, 2FA</span>
                             </div>
-                            <span className="material-symbols-outlined text-zinc-600 transition-colors group-hover:text-primary">chevron_right</span>
+                            <AppIcon name="chevron_right" className="text-zinc-600 transition-colors group-hover:text-primary" />
                         </button>
                     </div>
                 </section>
 
                 <section>
                     <div className="mb-3 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sm text-primary">settings_suggest</span>
+                        <AppIcon name="settings_suggest" className="text-sm text-primary" />
                         <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">APP_PREFERENCES</h2>
                     </div>
                     <div className="flex flex-col border border-border-dark bg-surface-dark">
@@ -108,7 +109,7 @@ export default function Me() {
                             </div>
                             <div className="group relative inline-flex cursor-pointer items-center">
                                 <input defaultChecked className="peer sr-only" type="checkbox" />
-<div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0 peer-checked:[&>div]:translate-x-5 peer-checked:[&>div]:bg-primary">
+                                <div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0 peer-checked:[&>div]:translate-x-5 peer-checked:[&>div]:bg-primary">
                                     <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500 transition-all duration-200"></div>
                                 </div>
                             </div>
@@ -132,9 +133,7 @@ export default function Me() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="border border-zinc-600 px-2 py-1 text-xs font-bold text-zinc-400 uppercase">VERTICAL_SCROLL</span>
-                                <span className="material-symbols-outlined text-[16px] text-zinc-600 transition-colors group-hover:text-primary">
-                                    edit
-                                </span>
+                                <AppIcon name="edit" className="text-[16px] text-zinc-600 transition-colors group-hover:text-primary" />
                             </div>
                         </button>
                     </div>
@@ -142,7 +141,7 @@ export default function Me() {
 
                 <section className="mb-6">
                     <button className="group relative flex w-full items-center justify-center gap-3 overflow-hidden border border-red-900/50 bg-transparent p-4 transition-all hover:border-red-500 hover:bg-red-900/10">
-                        <span className="material-symbols-outlined text-red-700 transition-colors group-hover:text-red-500">power_settings_new</span>
+                        <AppIcon name="power_settings_new" className="text-red-700 transition-colors group-hover:text-red-500" />
                         <span className="text-sm font-bold tracking-widest text-red-700 uppercase transition-colors group-hover:text-red-500">
                             TERMINATE_SESSION
                         </span>

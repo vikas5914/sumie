@@ -35,9 +35,19 @@ return [
         ],
     ],
 
-    'mangadex' => [
-        'base_url' => env('MANGADEX_BASE_URL', 'https://api.mangadex.org'),
-        'cover_url' => env('MANGADEX_COVER_URL', 'https://uploads.mangadex.org/covers'),
+    'comix' => [
+        'base_url' => env('COMIX_API_PROXY_BASE_URL', 'https://comix-proxy.kapadiya.net'),
+    ],
+
+    'comick' => [
+        'base_url' => env('COMIX_API_PROXY_BASE_URL', 'https://comix-proxy.kapadiya.net'),
+    ],
+
+    'image_proxy' => [
+        'allowed_hosts' => array_values(array_filter(array_map(
+            fn (string $host): string => trim($host),
+            explode(',', (string) env('IMAGE_PROXY_ALLOWED_HOSTS', 'meo.comick.pictures,.comick.pictures,static.comix.to,.comix.to'))
+        ))),
     ],
 
 ];

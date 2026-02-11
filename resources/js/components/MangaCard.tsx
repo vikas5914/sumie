@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import AppIcon from './AppIcon';
 
 interface MangaCardProps {
     title: string;
@@ -15,8 +16,10 @@ interface MangaCardProps {
 }
 
 export default function MangaCard({ title, subtitle, imageUrl, badge, rating, href = '#', className = '' }: MangaCardProps) {
+    const shouldPrefetch = href.startsWith('/');
+
     return (
-        <Link href={href} className={`group flex cursor-pointer flex-col gap-2 ${className}`}>
+        <Link href={href} prefetch={shouldPrefetch} className={`group flex cursor-pointer flex-col gap-2 ${className}`}>
             <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
@@ -37,7 +40,7 @@ export default function MangaCard({ title, subtitle, imageUrl, badge, rating, hr
                 {/* Rating */}
                 {rating && (
                     <div className="absolute top-2 right-2 flex items-center gap-1 border border-border-dark bg-background-dark/80 px-2 py-0.5 text-[10px] font-bold text-text-light">
-                        <span className="material-symbols-outlined text-[12px] text-primary">star</span> {rating}
+                        <AppIcon name="star" className="text-[12px] text-primary" /> {rating}
                     </div>
                 )}
             </div>

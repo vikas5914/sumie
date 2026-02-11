@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\MangaDexApiService;
+use App\Services\ComickApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -10,7 +10,9 @@ use Inertia\Response;
 
 class SearchController extends Controller
 {
-    public function index(Request $request, MangaDexApiService $mangaDex): Response
+    private const SEARCH_RESULT_LIMIT = 28;
+
+    public function index(Request $request, ComickApiService $comick): Response
     {
         $query = trim((string) $request->query('q', ''));
         $filter = strtolower(trim((string) $request->query('filter', 'all')));
@@ -25,29 +27,25 @@ class SearchController extends Controller
 
         if ($query !== '' && mb_strlen($query) >= 2) {
             try {
-                $remote = $mangaDex->searchManga([
+                $remote = $comick->searchManga([
                     'title' => $query,
-                    'limit' => 20,
-                    'contentRating' => ['safe', 'suggestive'],
-                    'order' => ['rating' => 'desc'],
+                    'limit' => self::SEARCH_RESULT_LIMIT,
+                    'showall' => false,
+                    'genres_mode' => 'and',
                 ]);
 
                 $filtered = $this->applyFilter($remote, $filter);
 
                 $results = $filtered
-                    ->map(function (array $mangaData) use ($mangaDex) {
-                        $manga = $mangaDex->syncMangaToDatabase($mangaData);
-
-                        return [
-                            'id' => $manga->id,
-                            'title' => $manga->title,
-                            'cover_image_url' => $manga->getProxiedCoverUrl(),
-                            'author' => $manga->author,
-                            'rating_average' => $manga->rating_average,
-                            'status' => $manga->status,
-                            'genres' => $manga->genres,
-                        ];
-                    })
+                    ->map(fn (array $mangaData) => [
+                        'id' => $mangaData['id'],
+                        'title' => $mangaData['title'],
+                        'cover_image_url' => $this->getProxiedCoverUrl($mangaData['cover_image_url']),
+                        'author' => $mangaData['author'],
+                        'rating_average' => $mangaData['rating_average'],
+                        'status' => $mangaData['status'],
+                        'genres' => $mangaData['genres'],
+                    ])
                     ->values();
             } catch (\Throwable) {
                 $results = collect();
@@ -61,6 +59,15 @@ class SearchController extends Controller
         ]);
     }
 
+    private function getProxiedCoverUrl(?string $coverUrl): ?string
+    {
+        if (! $coverUrl) {
+            return null;
+        }
+
+        return route('image.proxy', ['encodedUrl' => base64_encode($coverUrl)]);
+    }
+
     /**
      * @param  Collection<int, array<string, mixed>>  $results
      * @return Collection<int, array<string, mixed>>
@@ -71,25 +78,27 @@ class SearchController extends Controller
             return $results;
         }
 
-        return $results->filter(function (array $manga) use ($filter) {
+        return $results->filter(function (array $manga) use ($filter): bool {
             if ($filter === 'completed') {
                 return ($manga['status'] ?? null) === 'completed';
             }
 
             if ($filter === 'manga') {
-                return ($manga['country_of_origin'] ?? null) === 'Japan';
+                return strtolower((string) ($manga['type'] ?? '')) === 'manga';
             }
 
             if ($filter === 'manhwa') {
-                return ($manga['country_of_origin'] ?? null) === 'Korea';
+                return strtolower((string) ($manga['type'] ?? '')) === 'manhwa';
             }
 
             if ($filter === 'oneshot') {
                 $totalChapters = (int) ($manga['total_chapters'] ?? 0);
-                $formatTags = is_array($manga['format_tags'] ?? null) ? $manga['format_tags'] : [];
-                $hasOneshotTag = in_array('Oneshot', $formatTags, true) || in_array('One Shot', $formatTags, true);
+                $formats = is_array($manga['formats'] ?? null) ? $manga['formats'] : [];
+                $hasOneshotFormat = collect($formats)->contains(function ($format): bool {
+                    return in_array(strtolower((string) $format), ['oneshot', 'one shot'], true);
+                });
 
-                return $totalChapters <= 1 || $hasOneshotTag;
+                return $totalChapters <= 1 || $hasOneshotFormat;
             }
 
             return true;

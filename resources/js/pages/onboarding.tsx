@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import AppIcon from '../components/AppIcon';
 import { store as onboardingStore } from '../routes/onboarding';
 
 export default function Onboarding() {
@@ -28,7 +29,7 @@ export default function Onboarding() {
                                 {/* Inner ring with pulse */}
                                 <div className="absolute inset-2 animate-pulse rounded-full border border-primary/40" />
                                 {/* Center icon */}
-                                <span className="material-symbols-outlined relative z-10 text-4xl text-primary">menu_book</span>
+                                <AppIcon name="menu_book" className="relative z-10 text-4xl text-primary" />
                                 {/* Corner accent */}
                                 <div className="absolute -top-1 -right-1 size-3 border-t border-r border-primary" />
                                 <div className="absolute -bottom-1 -left-1 size-3 border-b border-l border-primary" />
@@ -36,12 +37,7 @@ export default function Onboarding() {
 
                             {/* Brand Name */}
                             <div className="text-center">
-                                <h1
-                                    className="mb-1 font-bold tracking-tight text-white"
-                                    style={{ fontFamily: 'Noto Sans JP, sans-serif', fontSize: '3rem', letterSpacing: '0.15em' }}
-                                >
-                                    SUMIE
-                                </h1>
+                                <h1 className="mb-1 font-japanese text-[3rem] font-bold tracking-[0.15em] text-white">SUMIE</h1>
                                 <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
                                     <span>墨絵</span>
                                     <span className="text-zinc-700">|</span>
@@ -65,7 +61,7 @@ export default function Onboarding() {
                                 <>
                                     {/* Input Field */}
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-xs font-medium tracking-wide text-zinc-500" htmlFor="name">
+                                        <label className="text-xs font-bold tracking-[0.12em] text-zinc-500 uppercase" htmlFor="name">
                                             What should we call you?
                                         </label>
                                         <div className="relative">
@@ -77,7 +73,7 @@ export default function Onboarding() {
                                                 maxLength={30}
                                                 required
                                                 autoFocus
-                                                className="h-12 w-full rounded-lg border border-border-dark bg-surface-dark px-4 text-sm font-medium text-text-light transition-all outline-none placeholder:text-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                                className="peer h-12 w-full rounded-lg border border-border-dark bg-surface-dark px-4 text-sm font-bold tracking-[0.08em] text-text-light uppercase transition-all outline-none placeholder:font-medium placeholder:tracking-[0.08em] placeholder:text-zinc-600 placeholder:uppercase focus:border-primary focus:ring-1 focus:ring-primary/20"
                                             />
                                             {/* Focus indicator line */}
                                             <div className="pointer-events-none absolute bottom-0 left-1/2 h-[2px] w-0 -translate-x-1/2 bg-primary transition-all duration-300 peer-focus:w-full" />
@@ -94,12 +90,20 @@ export default function Onboarding() {
                                         <span className="flex items-center gap-2">
                                             {processing ? 'Creating account...' : 'Get Started'}
                                             {!processing && (
-                                                <span className="material-symbols-outlined text-lg transition-transform duration-200 group-hover:translate-x-0.5">
-                                                    arrow_forward
-                                                </span>
+                                                <AppIcon
+                                                    name="arrow_forward"
+                                                    className="text-lg transition-transform duration-200 group-hover:translate-x-0.5"
+                                                />
                                             )}
                                         </span>
                                     </button>
+
+                                    {processing && (
+                                        <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
+                                            <AppIcon name="progress_activity" className="animate-spin text-sm" />
+                                            Preparing your home feed...
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </Form>

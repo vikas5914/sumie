@@ -1,5 +1,6 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
@@ -10,7 +11,7 @@ interface Genre {
 }
 
 interface Manga {
-    id: number;
+    id: string; // Comick slug
     title: string;
     description: string;
     cover_image_url: string;
@@ -22,7 +23,7 @@ interface Manga {
 }
 
 interface ContinueReading {
-    id: number;
+    id: string; // Comick slug
     title: string;
     cover_image_url: string;
     current_chapter: number;
@@ -31,7 +32,7 @@ interface ContinueReading {
 }
 
 interface Recommendation {
-    id: number;
+    id: string; // Comick slug
     title: string;
     cover_image_url: string;
     genres: Genre[];
@@ -50,11 +51,14 @@ interface HomeProps {
             avatar?: string;
         } | null;
     };
-    featuredManga: Manga | null;
-    trendingManga: Manga[];
-    continueReading: ContinueReading[];
-    recommendations: Recommendation[];
+    homeFeed?: {
+        featuredManga: Manga | null;
+        trendingManga: Manga[];
+        continueReading: ContinueReading[];
+        recommendations: Recommendation[];
+    };
     meta: HomeMeta;
+    [key: string]: unknown;
 }
 
 function timeAgo(dateString: string): string {
@@ -70,7 +74,11 @@ function timeAgo(dateString: string): string {
 }
 
 export default function Home() {
-    const { auth, featuredManga, trendingManga, continueReading, recommendations, meta } = usePage<HomeProps>().props;
+    const { auth, homeFeed, meta } = usePage<HomeProps>().props;
+    const featuredManga = homeFeed?.featuredManga ?? null;
+    const trendingManga = homeFeed?.trendingManga ?? [];
+    const continueReading = homeFeed?.continueReading ?? [];
+    const recommendations = homeFeed?.recommendations ?? [];
     const userName = auth.user?.name ?? 'Operator';
     const avatarUrl = auth.user?.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=22c55e&color=000`;
 
@@ -114,7 +122,7 @@ export default function Home() {
 
             if (response.ok) {
                 // Silently reload the page to get fresh data
-                router.reload({ only: ['featuredManga', 'trendingManga', 'meta'] });
+                router.reload({ only: ['homeFeed', 'meta'] });
             }
         } catch (error) {
             console.error('Background refresh failed:', error);
@@ -158,9 +166,7 @@ export default function Home() {
                     style={{ height: `${pullDistance}px` }}
                 >
                     <div className="flex items-center gap-2 text-sm text-zinc-400">
-                        <span className={`material-symbols-outlined transition-transform ${pullDistance > 50 ? 'rotate-180' : ''}`}>
-                            keyboard_arrow_down
-                        </span>
+                        <AppIcon name="keyboard_arrow_down" className={`transition-transform ${pullDistance > 50 ? 'rotate-180' : ''}`} />
                         {pullDistance > 50 ? 'Release to refresh' : 'Pull to refresh'}
                     </div>
                 </div>
@@ -169,7 +175,7 @@ export default function Home() {
             {/* Refreshing indicator */}
             {isRefreshing && (
                 <div className="fixed top-0 right-0 left-0 z-50 flex items-center justify-center bg-primary py-2 text-xs font-bold text-background-dark">
-                    <span className="material-symbols-outlined mr-2 animate-spin">sync</span>
+                    <AppIcon name="sync" className="mr-2 animate-spin" />
                     Updating manga...
                 </div>
             )}
@@ -190,7 +196,7 @@ export default function Home() {
                         </div>
                     </div>
                     <button className="relative flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-colors hover:bg-zinc-800">
-                        <span className="material-symbols-outlined text-2xl text-text-light">notifications</span>
+                        <AppIcon name="notifications" className="text-2xl text-text-light" />
                         <span className="absolute top-2 right-2 size-2.5 border-2 border-surface-dark bg-primary"></span>
                     </button>
                 </div>
@@ -212,172 +218,218 @@ export default function Home() {
                             disabled={isRefreshing}
                             className="flex items-center gap-1 text-xs font-bold text-yellow-500"
                         >
-                            <span className="material-symbols-outlined text-sm">refresh</span>
+                            <AppIcon name="refresh" className="text-sm" />
                             Refresh
                         </button>
                     </div>
                 )}
 
-                {/* Hero Section */}
-                {featuredManga && (
-                    <section className="px-4">
-                        <Link href={`/manga/${featuredManga.id}`}>
-                            <div className="group relative aspect-[4/3] w-full cursor-pointer overflow-hidden border border-border-dark shadow-lg">
-                                <div
-                                    className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
-                                    style={{
-                                        backgroundImage: `url("${featuredManga.banner_image_url || featuredManga.cover_image_url}")`,
-                                    }}
-                                ></div>
-                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/60 to-transparent"></div>
-                                <div className="absolute right-0 bottom-0 left-0 flex flex-col items-start gap-3 p-5">
-                                    <span className="bg-primary px-3 py-1 text-xs font-bold tracking-widest text-background-dark uppercase shadow-lg shadow-primary/40">
-                                        #1 TRENDING
-                                    </span>
-                                    <div>
-                                        <h2 className="mb-1 text-3xl font-bold text-text-light uppercase">{featuredManga.title}</h2>
-                                        <p className="line-clamp-2 text-sm text-zinc-400">{featuredManga.description}</p>
+                <Deferred data="homeFeed" fallback={<HomeFeedSkeleton />}>
+                    <>
+                        {/* Hero Section */}
+                        {featuredManga && (
+                            <section className="px-4">
+                                <Link href={`/manga/${featuredManga.id}`} prefetch>
+                                    <div className="group relative aspect-[4/3] w-full cursor-pointer overflow-hidden border border-border-dark shadow-lg">
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
+                                            style={{
+                                                backgroundImage: `url("${featuredManga.banner_image_url || featuredManga.cover_image_url}")`,
+                                            }}
+                                        ></div>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/60 to-transparent"></div>
+                                        <div className="absolute right-0 bottom-0 left-0 flex flex-col items-start gap-3 p-5">
+                                            <span className="bg-primary px-3 py-1 text-xs font-bold tracking-widest text-background-dark uppercase shadow-lg shadow-primary/40">
+                                                #1 TRENDING
+                                            </span>
+                                            <div>
+                                                <h2 className="mb-1 text-3xl font-bold text-text-light uppercase">{featuredManga.title}</h2>
+                                                <p className="line-clamp-2 text-sm text-zinc-400">{featuredManga.description}</p>
+                                            </div>
+                                            <div className="mt-1 flex w-full items-center gap-3">
+                                                <button className="flex h-10 flex-1 items-center justify-center gap-2 border border-text-light bg-text-light text-sm font-bold text-background-dark transition-colors hover:bg-zinc-300">
+                                                    <AppIcon name="menu_book" className="text-xl" />
+                                                    READ CHAPTER {featuredManga.total_chapters}
+                                                </button>
+                                                <button className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark text-text-light transition-colors hover:bg-zinc-800">
+                                                    <AppIcon name="bookmark_add" className="text-xl" />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="mt-1 flex w-full items-center gap-3">
-                                        <button className="flex h-10 flex-1 items-center justify-center gap-2 border border-text-light bg-text-light text-sm font-bold text-background-dark transition-colors hover:bg-zinc-300">
-                                            <span className="material-symbols-outlined text-xl">menu_book</span>
-                                            READ CHAPTER {featuredManga.total_chapters}
-                                        </button>
-                                        <button className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark text-text-light transition-colors hover:bg-zinc-800">
-                                            <span className="material-symbols-outlined text-xl">bookmark_add</span>
-                                        </button>
+                                </Link>
+                            </section>
+                        )}
+
+                        {/* Continue Reading */}
+                        <section className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between px-4">
+                                <h3 className="text-lg font-bold text-text-light uppercase">CONTINUE READING</h3>
+                                <Link className="text-sm font-bold text-primary uppercase hover:text-primary/80" href="/library" prefetch>
+                                    SEE ALL
+                                </Link>
+                            </div>
+                            {continueReading.length > 0 ? (
+                                <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2">
+                                    {continueReading.map((item) => (
+                                        <Link key={item.id} href={`/manga/${item.id}`} prefetch className="flex w-[280px] flex-none snap-center">
+                                            <div className="flex w-full items-center gap-3 border border-border-dark bg-surface-dark p-3 shadow-sm">
+                                                <div
+                                                    className="relative h-20 w-16 shrink-0 overflow-hidden border border-zinc-600 bg-cover bg-center"
+                                                    style={{
+                                                        backgroundImage: `url("${item.cover_image_url}")`,
+                                                    }}
+                                                ></div>
+                                                <div className="flex min-w-0 flex-1 flex-col justify-center">
+                                                    <h4 className="truncate font-bold text-text-light uppercase">{item.title}</h4>
+                                                    <p className="mb-2 text-xs text-zinc-500 uppercase">
+                                                        CHAPTER {item.current_chapter} • {timeAgo(item.last_read_at)}
+                                                    </p>
+                                                    <div className="h-1.5 w-full overflow-hidden border border-zinc-600 bg-zinc-700">
+                                                        <div className="h-full bg-primary" style={{ width: `${item.progress_percentage}%` }}></div>
+                                                    </div>
+                                                </div>
+                                                <button className="flex size-8 shrink-0 items-center justify-center border border-primary bg-primary text-background-dark">
+                                                    <AppIcon name="play_arrow" className="text-xl" />
+                                                </button>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="px-4">
+                                    <div className="border border-border-dark bg-surface-dark p-6 text-center">
+                                        <p className="text-sm text-zinc-500">No reading history found.</p>
+                                        <Link
+                                            href="/search"
+                                            prefetch
+                                            className="mt-2 inline-block text-sm font-bold text-primary uppercase hover:text-primary/80"
+                                        >
+                                            Start Reading
+                                        </Link>
                                     </div>
                                 </div>
-                            </div>
-                        </Link>
-                    </section>
-                )}
+                            )}
+                        </section>
 
-                {/* Continue Reading */}
-                <section className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between px-4">
-                        <h3 className="text-lg font-bold text-text-light uppercase">CONTINUE READING</h3>
-                        <Link className="text-sm font-bold text-primary uppercase hover:text-primary/80" href="/library">
-                            SEE ALL
-                        </Link>
-                    </div>
-                    {continueReading.length > 0 ? (
-                        <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2">
-                            {continueReading.map((item) => (
-                                <Link key={item.id} href={`/manga/${item.id}`} className="flex w-[280px] flex-none snap-center">
-                                    <div className="flex w-full items-center gap-3 border border-border-dark bg-surface-dark p-3 shadow-sm">
-                                        <div
-                                            className="relative h-20 w-16 shrink-0 overflow-hidden border border-zinc-600 bg-cover bg-center"
-                                            style={{
-                                                backgroundImage: `url("${item.cover_image_url}")`,
-                                            }}
-                                        ></div>
-                                        <div className="flex min-w-0 flex-1 flex-col justify-center">
-                                            <h4 className="truncate font-bold text-text-light uppercase">{item.title}</h4>
-                                            <p className="mb-2 text-xs text-zinc-500 uppercase">
-                                                CHAPTER {item.current_chapter} • {timeAgo(item.last_read_at)}
-                                            </p>
-                                            <div className="h-1.5 w-full overflow-hidden border border-zinc-600 bg-zinc-700">
-                                                <div className="h-full bg-primary" style={{ width: `${item.progress_percentage}%` }}></div>
+                        {/* Trending Now */}
+                        <section className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between px-4">
+                                <h3 className="text-lg font-bold text-text-light uppercase">TRENDING NOW</h3>
+                            </div>
+                            {trendingManga.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3">
+                                    {trendingManga.map((manga) => (
+                                        <Link
+                                            key={manga.id}
+                                            href={`/manga/${manga.id}`}
+                                            prefetch
+                                            className="group flex cursor-pointer flex-col gap-2"
+                                        >
+                                            <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
+                                                <div
+                                                    className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
+                                                    style={{
+                                                        backgroundImage: `url("${manga.cover_image_url}")`,
+                                                    }}
+                                                ></div>
+                                                <div className="absolute top-2 right-2 flex items-center gap-1 border border-border-dark bg-background-dark/80 px-2 py-0.5 text-[10px] font-bold text-text-light">
+                                                    <AppIcon name="star" className="text-[12px] text-primary" />{' '}
+                                                    {(manga.rating_average ?? 0).toFixed(1)}
+                                                </div>
+                                                {manga.status === 'ongoing' && (
+                                                    <div className="absolute top-2 left-2 border border-primary bg-primary/90 px-2 py-0.5 text-[10px] font-bold text-background-dark uppercase">
+                                                        NEW
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                        <button className="flex size-8 shrink-0 items-center justify-center border border-primary bg-primary text-background-dark">
-                                            <span className="material-symbols-outlined text-xl">play_arrow</span>
-                                        </button>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="px-4">
-                            <div className="border border-border-dark bg-surface-dark p-6 text-center">
-                                <p className="text-sm text-zinc-500">No reading history found.</p>
-                                <Link href="/search" className="mt-2 inline-block text-sm font-bold text-primary uppercase hover:text-primary/80">
-                                    Start Reading
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-                </section>
-
-                {/* Trending Now */}
-                <section className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between px-4">
-                        <h3 className="text-lg font-bold text-text-light uppercase">TRENDING NOW</h3>
-                    </div>
-                    {trendingManga.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3">
-                            {trendingManga.map((manga) => (
-                                <Link key={manga.id} href={`/manga/${manga.id}`} className="group flex cursor-pointer flex-col gap-2">
-                                    <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
-                                            style={{
-                                                backgroundImage: `url("${manga.cover_image_url}")`,
-                                            }}
-                                        ></div>
-                                        <div className="absolute top-2 right-2 flex items-center gap-1 border border-border-dark bg-background-dark/80 px-2 py-0.5 text-[10px] font-bold text-text-light">
-                                            <span className="material-symbols-outlined text-[12px] text-primary">star</span>{' '}
-                                            {typeof manga.rating_average === 'number'
-                                                ? manga.rating_average.toFixed(1)
-                                                : Number(manga.rating_average || 0).toFixed(1)}
-                                        </div>
-                                        {manga.status === 'ongoing' && (
-                                            <div className="absolute top-2 left-2 border border-primary bg-primary/90 px-2 py-0.5 text-[10px] font-bold text-background-dark uppercase">
-                                                NEW
+                                            <div>
+                                                <h4 className="truncate text-sm font-bold text-text-light uppercase">{manga.title}</h4>
+                                                <p className="text-xs text-zinc-500 uppercase">{manga.genres?.[0]?.name ?? 'Manga'}</p>
                                             </div>
-                                        )}
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="px-4">
+                                    <div className="border border-border-dark bg-surface-dark p-6 text-center">
+                                        <p className="text-sm text-zinc-500">No trending manga available.</p>
                                     </div>
-                                    <div>
-                                        <h4 className="truncate text-sm font-bold text-text-light uppercase">{manga.title}</h4>
-                                        <p className="text-xs text-zinc-500 uppercase">{manga.genres?.[0]?.name ?? 'Manga'}</p>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="px-4">
-                            <div className="border border-border-dark bg-surface-dark p-6 text-center">
-                                <p className="text-sm text-zinc-500">No trending manga available.</p>
-                            </div>
-                        </div>
-                    )}
-                </section>
+                                </div>
+                            )}
+                        </section>
 
-                {/* Recommendations */}
-                {recommendations.length > 0 && (
-                    <section className="flex flex-col gap-3 pb-8">
-                        <div className="flex items-center justify-between px-4">
-                            <h3 className="text-lg font-bold text-text-light uppercase">RECOMMENDED FOR YOU</h3>
-                        </div>
-                        <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2">
-                            {recommendations.map((manga) => (
-                                <Link
-                                    key={manga.id}
-                                    href={`/manga/${manga.id}`}
-                                    className="group flex w-[140px] flex-none cursor-pointer snap-center flex-col gap-2"
-                                >
-                                    <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
-                                            style={{
-                                                backgroundImage: `url("${manga.cover_image_url}")`,
-                                            }}
-                                        ></div>
-                                    </div>
-                                    <div>
-                                        <h4 className="truncate text-sm font-bold text-text-light uppercase">{manga.title}</h4>
-                                        <p className="text-xs text-zinc-500 uppercase">{manga.genres?.[0]?.name ?? 'Manga'}</p>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </section>
-                )}
+                        {/* Recommendations */}
+                        {recommendations.length > 0 && (
+                            <section className="flex flex-col gap-3 pb-8">
+                                <div className="flex items-center justify-between px-4">
+                                    <h3 className="text-lg font-bold text-text-light uppercase">RECOMMENDED FOR YOU</h3>
+                                </div>
+                                <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2">
+                                    {recommendations.map((manga) => (
+                                        <Link
+                                            key={manga.id}
+                                            href={`/manga/${manga.id}`}
+                                            prefetch
+                                            className="group flex w-[140px] flex-none cursor-pointer snap-center flex-col gap-2"
+                                        >
+                                            <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
+                                                <div
+                                                    className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
+                                                    style={{
+                                                        backgroundImage: `url("${manga.cover_image_url}")`,
+                                                    }}
+                                                ></div>
+                                            </div>
+                                            <div>
+                                                <h4 className="truncate text-sm font-bold text-text-light uppercase">{manga.title}</h4>
+                                                <p className="text-xs text-zinc-500 uppercase">{manga.genres?.[0]?.name ?? 'Manga'}</p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                    </>
+                </Deferred>
 
                 {/* Background Glow */}
                 <div className="pointer-events-none fixed top-0 left-1/2 -z-10 h-[50vh] w-full -translate-x-1/2 rounded-none bg-primary/10 opacity-30 blur-[80px]"></div>
             </main>
         </AppLayout>
+    );
+}
+
+function HomeFeedSkeleton() {
+    return (
+        <div className="flex flex-col gap-6">
+            <div className="px-4">
+                <div className="aspect-[4/3] w-full animate-pulse border border-border-dark bg-surface-dark" />
+            </div>
+
+            <section className="flex flex-col gap-3">
+                <div className="flex items-center justify-between px-4">
+                    <div className="h-5 w-40 animate-pulse bg-zinc-700/50" />
+                    <div className="h-4 w-16 animate-pulse bg-zinc-700/40" />
+                </div>
+                <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-2">
+                    {Array.from({ length: 2 }).map((_, index) => (
+                        <div key={index} className="h-[110px] w-[280px] flex-none animate-pulse border border-border-dark bg-surface-dark" />
+                    ))}
+                </div>
+            </section>
+
+            <section className="flex flex-col gap-3 px-4">
+                <div className="h-5 w-36 animate-pulse bg-zinc-700/50" />
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                        <div key={index} className="flex flex-col gap-2">
+                            <div className="aspect-[2/3] w-full animate-pulse border border-border-dark bg-surface-dark" />
+                            <div className="h-4 w-full animate-pulse bg-zinc-700/50" />
+                        </div>
+                    ))}
+                </div>
+            </section>
+        </div>
     );
 }

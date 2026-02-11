@@ -18,20 +18,39 @@ class MangaFactory extends Factory
     public function definition(): array
     {
         $title = fake()->words(3, true);
+        $slug = Str::slug($title.'-'.fake()->unique()->numberBetween(1000, 9999));
+        $hashId = fake()->unique()->regexify('[a-z0-9]{5}');
 
         return [
+            'id' => $hashId,
+            'slug' => $slug,
+            'source_manga_id' => fake()->numberBetween(1, 200000),
             'title' => $title,
-            'slug' => Str::slug($title),
+            'description' => fake()->paragraph(),
+            'cover_image_url' => 'https://static.comix.to/'.fake()->lexify('????').'/i/'.fake()->lexify('?').'/'.fake()->lexify('??').'/'.fake()->lexify('????????????').'.jpg',
+            'banner_image_url' => null,
             'author' => fake()->name(),
             'artist' => fake()->name(),
-            'description' => fake()->paragraph(),
-            'cover_image_url' => 'https://via.placeholder.com/300x450/1a1a1a/4CFF00?text='.urlencode($title),
+            'type' => fake()->randomElement(['manga', 'manhwa', 'manhua']),
             'status' => fake()->randomElement(['ongoing', 'completed', 'hiatus']),
+            'content_rating' => fake()->randomElement(['safe', 'suggestive']),
+            'is_nsfw' => false,
             'genres' => fake()->randomElements(['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi'], 3),
-            'total_chapters' => fake()->numberBetween(10, 200),
-            'rating_average' => fake()->randomFloat(2, 3, 5),
-            'rating_count' => fake()->numberBetween(100, 5000),
-            'view_count' => fake()->numberBetween(1000, 100000),
+            'themes' => fake()->randomElements(['Magic', 'School Life', 'Supernatural', 'Reincarnation'], 2),
+            'demographics' => fake()->randomElements(['Shounen', 'Seinen', 'Shoujo', 'Josei'], 1),
+            'formats' => fake()->randomElements(['Web Comic', 'Long Strip', 'Oneshot'], 1),
+            'total_chapters' => fake()->numberBetween(10, 300),
+            'release_year' => fake()->numberBetween(1990, 2026),
+            'country_of_origin' => fake()->randomElement(['Japan', 'Korea', 'China']),
+            'rating_average' => fake()->randomFloat(2, 6, 9.8),
+            'rating_count' => fake()->numberBetween(50, 5000),
+            'view_count' => fake()->numberBetween(100, 50000),
+            'source_name' => 'Comix',
+            'source_url' => 'https://comix.to/comic/'.$slug,
+            'links' => [],
+            'last_fetched_at' => now(),
+            'created_at_api' => now()->subDays(10),
+            'updated_at_api' => now()->subDay(),
         ];
     }
 }
