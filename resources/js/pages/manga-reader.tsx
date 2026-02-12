@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AppIcon from '../components/AppIcon';
+import Header from '../components/Header';
 import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
 
 interface MangaReaderProps {
@@ -43,8 +44,8 @@ export default function MangaReader() {
         <div className="min-h-screen bg-black font-mono text-text-light antialiased">
             <Head title={`${manga.title} - Chapter ${chapterLabel}`} />
 
-            <header className="sticky top-0 z-20 border-b border-border-dark bg-black/90 backdrop-blur-sm">
-                <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3">
+            <Header className="bg-black/90 px-4 py-5">
+                <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
                         <Link
                             href={`/manga/${manga.id}`}
@@ -72,7 +73,7 @@ export default function MangaReader() {
                         </a>
                     )}
                 </div>
-            </header>
+            </Header>
 
             <main className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-3 py-4 pb-24">
                 {images.length > 0 ? (
