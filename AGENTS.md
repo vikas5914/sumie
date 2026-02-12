@@ -1,3 +1,5 @@
+Bugs: add regression test when it fits.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -653,3 +655,4 @@ Custom events can extend built-in events and be passed via `->event(CustomEvent:
 - [https://nativephp.com/docs/mobile/2/concepts/ci-cd] Use these docs for continuous integration and deployment pipelines for mobile apps
 </available-docs>
 </laravel-boost-guidelines>
+

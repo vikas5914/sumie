@@ -4,20 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Models\Chapter;
 use App\Models\Manga;
+use App\Models\ReadingProgress;
 use App\Models\UserManga;
+use App\Services\ComickApiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class UserMangaController extends Controller
 {
-    public function store(Request $request, string $mangaId): RedirectResponse
+    public function store(Request $request, string $mangaId, ComickApiService $comick): RedirectResponse
     {
         $user = $request->user();
-        $manga = Manga::findOrFail($mangaId);
+
+        try {
+            $manga = $this->resolveManga($mangaId, $comick);
+        } catch (RuntimeException) {
+            return redirect()->back()->with('error', 'Manga not found');
+        }
+
+        $status = $request->input('status', 'reading');
+        $validInitialStatuses = ['reading', 'planned'];
+
+        if (! in_array($status, $validInitialStatuses, true)) {
+            $status = 'reading';
+        }
 
         // Check if already in library
         $existing = UserManga::where('user_id', $user->id)
-            ->where('manga_id', $mangaId)
+            ->where('manga_id', $manga->id)
             ->first();
 
         if ($existing) {
@@ -25,22 +40,26 @@ class UserMangaController extends Controller
         }
 
         // Get first chapter
-        $firstChapter = Chapter::where('manga_id', $mangaId)
+        $firstChapter = Chapter::where('manga_id', $manga->id)
             ->orderBy('chapter_number')
             ->first();
 
+        $isReadingNow = $status === 'reading';
+
         UserManga::create([
             'user_id' => $user->id,
-            'manga_id' => $mangaId,
-            'status' => 'reading',
-            'current_chapter_id' => $firstChapter?->id,
+            'manga_id' => $manga->id,
+            'status' => $status,
+            'current_chapter_id' => $isReadingNow ? $firstChapter?->id : null,
             'progress_percentage' => 0,
             'is_favorite' => false,
             'notify_on_update' => true,
-            'started_at' => now(),
+            'started_at' => $isReadingNow ? now() : null,
         ]);
 
-        return redirect()->back()->with('message', 'Added to library');
+        $message = $status === 'planned' ? 'Bookmarked' : 'Added to library';
+
+        return redirect()->back()->with('message', $message);
     }
 
     public function updateStatus(Request $request, int $id): RedirectResponse
@@ -84,6 +103,58 @@ class UserMangaController extends Controller
         $message = $userManga->is_favorite ? 'Added to favorites' : 'Removed from favorites';
 
         return redirect()->back()->with('message', $message);
+    }
+
+    public function toggleBookmark(Request $request, string $mangaId, ComickApiService $comick): RedirectResponse
+    {
+        $user = $request->user();
+
+        try {
+            $manga = $this->resolveManga($mangaId, $comick);
+        } catch (RuntimeException) {
+            return redirect()->back()->with('error', 'Manga not found');
+        }
+
+        $existing = UserManga::query()
+            ->where('user_id', $user->id)
+            ->where('manga_id', $manga->id)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+
+            ReadingProgress::query()
+                ->where('user_id', $user->id)
+                ->where('manga_id', $manga->id)
+                ->delete();
+
+            return redirect()->back()->with('message', 'Removed from library');
+        }
+
+        UserManga::query()->create([
+            'user_id' => $user->id,
+            'manga_id' => $manga->id,
+            'status' => 'planned',
+            'progress_percentage' => 0,
+            'is_favorite' => false,
+            'notify_on_update' => true,
+        ]);
+
+        return redirect()->back()->with('message', 'Bookmarked');
+    }
+
+    private function resolveManga(string $mangaId, ComickApiService $comick): Manga
+    {
+        $existing = Manga::query()->find($mangaId)
+            ?? Manga::query()->where('slug', $mangaId)->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $mangaData = $comick->getMangaBySlug($mangaId);
+
+        return $comick->syncMangaToDatabase($mangaData);
     }
 
     public function destroy(Request $request, int $id): RedirectResponse

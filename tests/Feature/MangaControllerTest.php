@@ -3,6 +3,7 @@
 use App\Models\Chapter;
 use App\Models\Manga;
 use App\Models\User;
+use App\Models\UserManga;
 use App\Services\ComickApiService;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -160,6 +161,7 @@ it('renders manga reader for a valid chapter and tracks progress', function () {
             ->component('manga-reader')
             ->where('manga.id', $manga->id)
             ->where('chapter.id', '8159270')
+            ->where('source_url', "https://comix.to/title/{$manga->id}/8159270")
             ->where('navigation.previous_chapter_id', $previousChapter->external_id)
             ->where('navigation.next_chapter_id', $nextChapter->external_id)
             ->has('images', 2)
@@ -170,6 +172,60 @@ it('renders manga reader for a valid chapter and tracks progress', function () {
         'chapter_id' => $chapter->id,
         'manga_id' => $manga->id,
     ]);
+});
+
+it('moves bookmarked manga into reading when opening a chapter', function () {
+    $this->withoutVite();
+
+    $user = User::factory()->create();
+    $manga = Manga::factory()->create(['id' => 'book1', 'slug' => 'bookmarked-title']);
+
+    $chapter = Chapter::factory()->create([
+        'manga_id' => $manga->id,
+        'chapter_number' => 1,
+        'chapter_label' => '1',
+        'external_id' => '910001',
+        'title' => 'Start',
+    ]);
+
+    UserManga::query()->create([
+        'user_id' => $user->id,
+        'manga_id' => $manga->id,
+        'status' => 'planned',
+        'progress_percentage' => 0,
+        'is_favorite' => false,
+        'notify_on_update' => true,
+    ]);
+
+    $comick = mock(ComickApiService::class);
+    $comick->shouldNotReceive('getMangaBySlug');
+    $comick->shouldNotReceive('syncMangaToDatabase');
+    $comick->shouldNotReceive('getMangaChaptersBySlug');
+    $comick->shouldNotReceive('syncChapters');
+    $comick->shouldReceive('getChapterById')->once()->with('910001')->andReturn([
+        'id' => '910001',
+        'title' => 'Start',
+        'page_count' => 1,
+        'images' => [
+            ['url' => 'https://example.com/p1.webp', 'width' => 800, 'height' => 1200],
+        ],
+    ]);
+
+    actingAs($user)
+        ->get(route('manga.read', ['id' => $manga->id, 'chapterId' => '910001']))
+        ->assertOk();
+
+    $entry = UserManga::query()
+        ->where('user_id', $user->id)
+        ->where('manga_id', $manga->id)
+        ->first();
+
+    expect($entry)
+        ->not->toBeNull()
+        ->and($entry->status)->toBe('reading')
+        ->and($entry->current_chapter_id)->toBe($chapter->id)
+        ->and((float) $entry->progress_percentage)->toBeGreaterThan(0)
+        ->and($entry->last_read_at)->not->toBeNull();
 });
 
 it('redirects manga reader legacy slug URL to canonical hash id URL', function () {

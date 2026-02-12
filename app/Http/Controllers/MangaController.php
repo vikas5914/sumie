@@ -216,6 +216,11 @@ class MangaController extends Controller
         $user = $request->user();
 
         if ($user) {
+            $totalChapters = max(1, $orderedChapters->count());
+            $progressPercentage = $index >= 0
+                ? round((($index + 1) / $totalChapters) * 100, 2)
+                : 0.0;
+
             ReadingProgress::query()->updateOrCreate(
                 [
                     'user_id' => $user->id,
@@ -236,17 +241,24 @@ class MangaController extends Controller
                 ->first();
 
             if ($userManga) {
-                $totalChapters = max(1, $orderedChapters->count());
-                $progressPercentage = $index >= 0
-                    ? round((($index + 1) / $totalChapters) * 100, 2)
-                    : (float) $userManga->progress_percentage;
-
                 $userManga->update([
                     'current_chapter_id' => $chapter->id,
                     'last_read_at' => now(),
                     'progress_percentage' => $progressPercentage,
                     'status' => $userManga->status === 'planned' ? 'reading' : $userManga->status,
                     'started_at' => $userManga->started_at ?? now(),
+                ]);
+            } else {
+                UserManga::query()->create([
+                    'user_id' => $user->id,
+                    'manga_id' => $manga->id,
+                    'status' => 'reading',
+                    'current_chapter_id' => $chapter->id,
+                    'progress_percentage' => $progressPercentage,
+                    'is_favorite' => false,
+                    'notify_on_update' => true,
+                    'started_at' => now(),
+                    'last_read_at' => now(),
                 ]);
             }
         }
@@ -284,7 +296,11 @@ class MangaController extends Controller
                 'previous_chapter_id' => $previousChapter?->external_id,
                 'next_chapter_id' => $nextChapter?->external_id,
             ],
-            'source_url' => $chapter->source_url ?: "https://comix.to/chapter/{$chapterId}",
+            'source_url' => $this->buildSourceChapterUrl(
+                $manga->id,
+                (string) ($chapter->external_id ?: $chapterId),
+                $chapter->source_url
+            ),
         ]);
     }
 
@@ -300,5 +316,18 @@ class MangaController extends Controller
         }
 
         return route('image.proxy', ['encodedUrl' => base64_encode($imageUrl)]);
+    }
+
+    private function buildSourceChapterUrl(string $mangaId, string $chapterExternalId, ?string $fallback): ?string
+    {
+        if ($mangaId !== '' && $chapterExternalId !== '') {
+            return "https://comix.to/title/{$mangaId}/{$chapterExternalId}";
+        }
+
+        if (is_string($fallback) && $fallback !== '') {
+            return $fallback;
+        }
+
+        return null;
     }
 }

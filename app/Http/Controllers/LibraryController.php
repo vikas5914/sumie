@@ -5,19 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\UserManga;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class LibraryController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $user = $request->user();
         $useImageProxy = $user?->shouldUseImageProxy() ?? false;
-        $status = $request->query('status', 'reading');
+        $status = $request->query('status', 'all');
 
         // Validate status parameter
-        $validStatuses = ['reading', 'completed', 'on_hold', 'dropped', 'planned'];
+        $validStatuses = ['all', 'reading', 'completed', 'on_hold', 'dropped', 'planned'];
         if (! in_array($status, $validStatuses)) {
-            $status = 'reading';
+            $status = 'all';
         }
 
         // Get user's library entries
@@ -28,7 +29,7 @@ class LibraryController extends Controller
             })
             ->orderBy('last_read_at', 'desc')
             ->get()
-            ->map(function ($userManga) {
+            ->map(function ($userManga) use ($useImageProxy) {
                 return [
                     'id' => $userManga->id,
                     'manga' => [
@@ -48,10 +49,12 @@ class LibraryController extends Controller
 
         // Get counts for each status
         $counts = [
+            'all' => UserManga::where('user_id', $user->id)->count(),
             'reading' => UserManga::where('user_id', $user->id)->where('status', 'reading')->count(),
             'completed' => UserManga::where('user_id', $user->id)->where('status', 'completed')->count(),
-            'downloaded' => 0, // TODO: Implement downloads
+            'on_hold' => UserManga::where('user_id', $user->id)->where('status', 'on_hold')->count(),
             'dropped' => UserManga::where('user_id', $user->id)->where('status', 'dropped')->count(),
+            'planned' => UserManga::where('user_id', $user->id)->where('status', 'planned')->count(),
         ];
 
         return Inertia::render('library', [

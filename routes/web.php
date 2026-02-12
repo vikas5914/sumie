@@ -40,6 +40,8 @@ Route::middleware(['auth'])->group(function () {
     // Library management routes
     Route::post('/library/manga/{mangaId}', [UserMangaController::class, 'store'])->name('library.store')
         ->where('mangaId', $slugPattern);
+    Route::post('/library/manga/{mangaId}/bookmark', [UserMangaController::class, 'toggleBookmark'])->name('library.bookmark.toggle')
+        ->where('mangaId', $slugPattern);
     Route::patch('/library/{id}/status', [UserMangaController::class, 'updateStatus'])->name('library.update-status');
     Route::patch('/library/{id}/favorite', [UserMangaController::class, 'toggleFavorite'])->name('library.toggle-favorite');
     Route::delete('/library/{id}', [UserMangaController::class, 'destroy'])->name('library.destroy');

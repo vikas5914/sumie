@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
+import UserAvatar from '../components/UserAvatar';
 import AppLayout from '../layouts/AppLayout';
 import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
 
@@ -27,6 +28,7 @@ interface ContinueReading {
     id: string; // Comick slug
     title: string;
     cover_image_url: string;
+    current_chapter_id: string | null;
     current_chapter: number;
     progress_percentage: number;
     last_read_at: string;
@@ -83,7 +85,6 @@ export default function Home() {
     const recommendations = homeFeed?.recommendations ?? [];
     const userName = auth.user?.name ?? 'Operator';
     const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
-    const avatarUrl = auth.user?.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=22c55e&color=000`;
     const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
         const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
 
@@ -192,12 +193,7 @@ export default function Home() {
             <Header className="">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div
-                            className="size-10 bg-cover bg-center bg-no-repeat ring-1 ring-primary"
-                            style={{
-                                backgroundImage: `url("${avatarUrl}")`,
-                            }}
-                        ></div>
+                        <UserAvatar name={userName} size={38} />
                         <div>
                             <p className="text-xs font-bold tracking-widest text-zinc-400 uppercase">WELCOME BACK</p>
                             <p className="text-xl leading-tight font-bold text-primary uppercase">{userName}</p>
@@ -256,15 +252,10 @@ export default function Home() {
                                                 <h2 className="mb-1 text-3xl font-bold text-text-light uppercase">{featuredManga.title}</h2>
                                                 <p className="line-clamp-2 text-sm text-zinc-400">{featuredManga.description}</p>
                                             </div>
-                                            <div className="mt-1 flex w-full items-center gap-3">
-                                                <button className="flex h-10 flex-1 items-center justify-center gap-2 border border-text-light bg-text-light text-sm font-bold text-background-dark transition-colors hover:bg-zinc-300">
-                                                    <AppIcon name="menu_book" className="text-xl" />
-                                                    READ CHAPTER {featuredManga.total_chapters}
-                                                </button>
-                                                <button className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark text-text-light transition-colors hover:bg-zinc-800">
-                                                    <AppIcon name="bookmark_add" className="text-xl" />
-                                                </button>
-                                            </div>
+                                            <span className="mt-1 flex h-10 w-full items-center justify-center gap-2 border border-text-light bg-text-light text-sm font-bold text-background-dark transition-colors group-hover:bg-zinc-300">
+                                                <AppIcon name="menu_book" className="text-xl" />
+                                                READ CHAPTER {featuredManga.total_chapters}
+                                            </span>
                                         </div>
                                     </div>
                                 </Link>
@@ -275,36 +266,42 @@ export default function Home() {
                         <section className="flex flex-col gap-3">
                             <div className="flex items-center justify-between px-4">
                                 <h3 className="text-lg font-bold text-text-light uppercase">CONTINUE READING</h3>
-                                <Link className="text-sm font-bold text-primary uppercase hover:text-primary/80" href="/library" prefetch>
+                                <Link className="text-sm font-bold text-primary uppercase hover:text-primary/80" href="/library">
                                     SEE ALL
                                 </Link>
                             </div>
                             {continueReading.length > 0 ? (
                                 <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2">
-                                    {continueReading.map((item) => (
-                                        <Link key={item.id} href={`/manga/${item.id}`} prefetch className="flex w-[280px] flex-none snap-center">
-                                            <div className="flex w-full items-center gap-3 border border-border-dark bg-surface-dark p-3 shadow-sm">
-                                                <div
-                                                    className="relative h-20 w-16 shrink-0 overflow-hidden border border-zinc-600 bg-cover bg-center"
-                                                    style={{
-                                                        backgroundImage: buildBackgroundImage(item.cover_image_url),
-                                                    }}
-                                                ></div>
-                                                <div className="flex min-w-0 flex-1 flex-col justify-center">
-                                                    <h4 className="truncate font-bold text-text-light uppercase">{item.title}</h4>
-                                                    <p className="mb-2 text-xs text-zinc-500 uppercase">
-                                                        CHAPTER {item.current_chapter} • {timeAgo(item.last_read_at)}
-                                                    </p>
-                                                    <div className="h-1.5 w-full overflow-hidden border border-zinc-600 bg-zinc-700">
-                                                        <div className="h-full bg-primary" style={{ width: `${item.progress_percentage}%` }}></div>
+                                    {continueReading.map((item) => {
+                                        const continueHref = item.current_chapter_id
+                                            ? `/manga/${item.id}/read/${item.current_chapter_id}`
+                                            : `/manga/${item.id}`;
+
+                                        return (
+                                            <Link key={item.id} href={continueHref} prefetch className="flex w-[280px] flex-none snap-center">
+                                                <div className="flex w-full items-center gap-3 border border-border-dark bg-surface-dark p-3 shadow-sm">
+                                                    <div
+                                                        className="relative h-20 w-16 shrink-0 overflow-hidden border border-zinc-600 bg-cover bg-center"
+                                                        style={{
+                                                            backgroundImage: buildBackgroundImage(item.cover_image_url),
+                                                        }}
+                                                    ></div>
+                                                    <div className="flex min-w-0 flex-1 flex-col justify-center">
+                                                        <h4 className="truncate font-bold text-text-light uppercase">{item.title}</h4>
+                                                        <p className="mb-2 text-xs text-zinc-500 uppercase">
+                                                            CHAPTER {item.current_chapter} - {timeAgo(item.last_read_at)}
+                                                        </p>
+                                                        <div className="h-1.5 w-full overflow-hidden border border-zinc-600 bg-zinc-700">
+                                                            <div className="h-full bg-primary" style={{ width: `${item.progress_percentage}%` }}></div>
+                                                        </div>
                                                     </div>
+                                                    <span className="flex size-8 shrink-0 items-center justify-center border border-primary bg-primary text-background-dark">
+                                                        <AppIcon name="play_arrow" className="text-xl" />
+                                                    </span>
                                                 </div>
-                                                <button className="flex size-8 shrink-0 items-center justify-center border border-primary bg-primary text-background-dark">
-                                                    <AppIcon name="play_arrow" className="text-xl" />
-                                                </button>
-                                            </div>
-                                        </Link>
-                                    ))}
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <div className="px-4">

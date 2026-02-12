@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
+import UserAvatar from '../components/UserAvatar';
 import AppLayout from '../layouts/AppLayout';
 import { readImageProxyPreference, writeImageProxyPreference } from '../lib/image';
 import type { SharedData } from '../types';
@@ -60,13 +61,7 @@ export default function Me() {
                 <div className="flex flex-col gap-6 px-5 pb-5">
                     <div className="flex items-start gap-4">
                         <div className="group relative cursor-pointer">
-                            <div
-                                className="size-20 border border-zinc-600 bg-cover bg-center bg-no-repeat grayscale transition-all duration-300 hover:grayscale-0"
-                                style={{
-                                    backgroundImage:
-                                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDKIWh7R3m6byrcvwlY6mcmU9zKbBG_bIBWoqY5LZwrifsD28-9GNT7YWCG2diwAL5ry1w_JbimssL6xLUlBZU60hcAx2tRM6uqneOa5QEi8vLvPIPPlvjaR2wA9zgEHBJcDqThorjKEXzQ7hbGZHGsXbTZVa-ucRmJKBtqvuO_sTJQ6eYU0XJ0sNhKvmYbK_EqDRVex7fKwGHd3QxC3QZbMJoFsAn_3UKbLciTny1zHcVqKR_XDLXuOO9PcyJk1JEuOEUcJUuJcb8")',
-                                }}
-                            ></div>
+                            <UserAvatar name={userName} size={76} className="p-0 transition-all duration-300" />
                             <div className="absolute -right-2 -bottom-2 border border-black bg-primary px-1.5 py-0.5 text-[10px] font-bold text-black shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)]">
                                 LVL.42
                             </div>

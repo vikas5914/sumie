@@ -282,7 +282,7 @@ class ComickApiService
                 'release_date' => $chapterData['published_at'] ?? null,
                 'language' => (string) ($chapterData['language'] ?? 'en'),
                 'page_count' => (int) ($chapterData['page_count'] ?? 0),
-                'source_url' => $externalId !== '' ? "https://comix.to/chapter/{$externalId}" : null,
+                'source_url' => $externalId !== '' ? "https://comix.to/title/{$manga->id}/{$externalId}" : null,
                 'is_published' => true,
             ];
 

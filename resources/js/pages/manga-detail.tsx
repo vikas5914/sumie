@@ -1,5 +1,5 @@
-import { Deferred, Head, Link, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
@@ -213,6 +213,28 @@ export default function MangaDetail() {
     const descriptionHtml = useMemo(() => sanitizeDescriptionHtml(manga.description ?? ''), [manga.description]);
     const continueChapterId = libraryStatus?.current_chapter_id ?? manga.first_chapter_id;
     const startChapterId = manga.first_chapter_id;
+    const [isBookmarked, setIsBookmarked] = useState<boolean>(Boolean(libraryStatus));
+
+    useEffect(() => {
+        setIsBookmarked(Boolean(libraryStatus));
+    }, [libraryStatus]);
+
+    const handleBookmark = (): void => {
+        const wasBookmarked = isBookmarked;
+        setIsBookmarked(!wasBookmarked);
+
+        router.post(
+            `/library/manga/${manga.id}/bookmark`,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => {
+                    setIsBookmarked(wasBookmarked);
+                },
+            },
+        );
+    };
 
     return (
         <div className="min-h-screen bg-background-dark font-mono text-text-light antialiased selection:bg-primary selection:text-black">
@@ -307,8 +329,16 @@ export default function MangaDetail() {
                                     START READING
                                 </Link>
                             )}
-                            <button className="flex size-12 items-center justify-center border border-border-dark bg-surface-dark text-text-light transition-colors hover:border-primary hover:text-primary active:translate-y-0.5">
-                                <AppIcon name={libraryStatus?.is_favorite ? 'bookmark' : 'bookmark_add'} />
+                            <button
+                                type="button"
+                                onClick={handleBookmark}
+                                className={`flex size-12 items-center justify-center border transition-colors active:translate-y-0.5 ${
+                                    isBookmarked
+                                        ? 'border-primary bg-primary text-black shadow-[0_0_0_1px_rgba(0,0,0,0.2)_inset] hover:brightness-95'
+                                        : 'border-border-dark bg-surface-dark text-text-light hover:border-primary hover:text-primary'
+                                }`}
+                            >
+                                <AppIcon name={isBookmarked ? 'bookmarks' : 'bookmark_add'} />
                             </button>
                         </div>
 

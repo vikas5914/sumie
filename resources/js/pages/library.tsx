@@ -31,10 +31,12 @@ interface LibraryItem {
 }
 
 interface LibraryCounts {
+    all: number;
     reading: number;
     completed: number;
-    downloaded: number;
+    on_hold: number;
     dropped: number;
+    planned: number;
 }
 
 interface LibraryProps {
@@ -51,6 +53,7 @@ interface LibraryProps {
 }
 
 const statusLabels: Record<string, string> = {
+    all: 'All',
     reading: 'Reading',
     completed: 'Completed',
     on_hold: 'On Hold',
@@ -58,7 +61,7 @@ const statusLabels: Record<string, string> = {
     planned: 'Planned',
 };
 
-const statusOrder = ['reading', 'completed', 'on_hold', 'dropped', 'planned'];
+const statusOrder = ['all', 'reading', 'completed', 'on_hold', 'dropped', 'planned'];
 
 export default function Library() {
     const { auth, libraryItems, currentStatus, counts } = usePage<LibraryProps>().props;
@@ -197,7 +200,9 @@ export default function Library() {
                     <div className="flex flex-1 flex-col items-center justify-center p-8">
                         <div className="border border-border-dark bg-surface-dark p-8 text-center">
                             <AppIcon name="menu_book" className="mb-4 block text-4xl text-zinc-600" />
-                            <p className="mb-2 text-sm font-bold text-zinc-400 uppercase">No {statusLabels[currentStatus]} Items</p>
+                            <p className="mb-2 text-sm font-bold text-zinc-400 uppercase">
+                                {currentStatus === 'all' ? 'No Library Items' : `No ${statusLabels[currentStatus]} Items`}
+                            </p>
                             <p className="mb-4 text-xs text-zinc-500">Start adding manga to your library</p>
                             <Link
                                 href="/search"

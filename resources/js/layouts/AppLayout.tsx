@@ -45,7 +45,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                         <Link
                             href="/library"
-                            prefetch
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/library') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}

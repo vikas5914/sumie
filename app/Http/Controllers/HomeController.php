@@ -225,6 +225,7 @@ class HomeController extends Controller
         return UserManga::with(['manga', 'currentChapter'])
             ->where('user_id', $user->id)
             ->where('status', 'reading')
+            ->whereNotNull('last_read_at')
             ->orderBy('last_read_at', 'desc')
             ->take(5)
             ->get()
@@ -233,6 +234,7 @@ class HomeController extends Controller
                 'title' => $userManga->manga->title,
                 'cover_image_url' => $userManga->manga->getCoverImageUrl($useImageProxy),
                 'genres' => $userManga->manga->genres,
+                'current_chapter_id' => $userManga->currentChapter?->external_id,
                 'current_chapter' => $userManga->currentChapter?->chapter_number ?? 1,
                 'progress_percentage' => $userManga->progress_percentage,
                 'last_read_at' => $userManga->last_read_at?->diffForHumans(),
