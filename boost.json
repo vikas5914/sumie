@@ -1,15 +1,11 @@
 {
     "agents": [
+        "cursor",
         "codex",
         "opencode"
     ],
-    "editors": [
-        "codex",
-        "opencode",
-        "vscode"
-    ],
-    "guidelines": [
+    "guidelines": true,
+    "packages": [
         "nativephp/mobile"
-    ],
-    "herd_mcp": true
+    ]
 }
