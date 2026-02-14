@@ -13,6 +13,8 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
     strategy:
       matrix:
         php-version: ['8.4', '8.5']
