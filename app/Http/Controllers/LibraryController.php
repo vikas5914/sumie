@@ -47,14 +47,20 @@ class LibraryController extends Controller
                 ];
             });
 
-        // Get counts for each status
+        $statusCounts = UserManga::query()
+            ->where('user_id', $user->id)
+            ->selectRaw('status, COUNT(*) as aggregate_count')
+            ->groupBy('status')
+            ->pluck('aggregate_count', 'status');
+
+        // Get counts for each status.
         $counts = [
-            'all' => UserManga::where('user_id', $user->id)->count(),
-            'reading' => UserManga::where('user_id', $user->id)->where('status', 'reading')->count(),
-            'completed' => UserManga::where('user_id', $user->id)->where('status', 'completed')->count(),
-            'on_hold' => UserManga::where('user_id', $user->id)->where('status', 'on_hold')->count(),
-            'dropped' => UserManga::where('user_id', $user->id)->where('status', 'dropped')->count(),
-            'planned' => UserManga::where('user_id', $user->id)->where('status', 'planned')->count(),
+            'all' => (int) $statusCounts->sum(),
+            'reading' => (int) ($statusCounts->get('reading') ?? 0),
+            'completed' => (int) ($statusCounts->get('completed') ?? 0),
+            'on_hold' => (int) ($statusCounts->get('on_hold') ?? 0),
+            'dropped' => (int) ($statusCounts->get('dropped') ?? 0),
+            'planned' => (int) ($statusCounts->get('planned') ?? 0),
         ];
 
         return Inertia::render('library', [

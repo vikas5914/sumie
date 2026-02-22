@@ -1,16 +1,15 @@
 <?php
 
+use App\Http\Controllers\HomeController;
+use App\Models\Chapter;
+use App\Models\Manga;
 use App\Models\User;
+use App\Models\UserManga;
 use App\Services\ComickApiService;
-use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\mock;
-
-beforeEach(function () {
-    Cache::flush();
-});
 
 it('loads the home shell without resolving deferred feed data', function () {
     $user = User::factory()->create();
@@ -25,44 +24,40 @@ it('loads the home shell without resolving deferred feed data', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('home')
-            ->where('meta.hasCachedData', false)
         );
 });
 
-it('refreshes home cache in the background', function () {
+it('returns continue reading timestamps as ISO-8601', function () {
     $user = User::factory()->create();
+    $manga = Manga::factory()->create([
+        'id' => 'homex1',
+        'title' => 'Home Feed Test',
+    ]);
+    $chapter = Chapter::factory()->create([
+        'manga_id' => $manga->id,
+        'external_id' => 'chapterx1',
+        'chapter_number' => 5,
+    ]);
 
-    $comick = mock(ComickApiService::class);
+    UserManga::query()->create([
+        'user_id' => $user->id,
+        'manga_id' => $manga->id,
+        'status' => 'reading',
+        'current_chapter_id' => $chapter->id,
+        'progress_percentage' => 25,
+        'notify_on_update' => true,
+        'last_read_at' => now()->subHours(2),
+    ]);
 
-    $comick->shouldReceive('getTrendingManga')->once()->with(12)->andReturn(collect([
-        [
-            'id' => '7nzg',
-            'slug' => 'jujutsu-kaisen',
-            'title' => 'Jujutsu Kaisen',
-            'description' => 'desc',
-            'cover_image_url' => 'https://static.comix.to/m/n/o.jpg',
-            'banner_image_url' => null,
-            'author' => null,
-            'artist' => null,
-            'status' => 'completed',
-            'content_rating' => 'safe',
-            'is_nsfw' => false,
-            'genres' => ['Action'],
-            'themes' => [],
-            'demographics' => ['Shounen'],
-            'formats' => ['Web Comic'],
-            'release_year' => 2018,
-            'rating_average' => 8.9,
-            'rating_count' => 2016,
-            'total_chapters' => 271,
-            'links' => [],
-        ],
-    ]));
+    $controller = new HomeController(app(ComickApiService::class));
+    $method = new ReflectionMethod($controller, 'getContinueReading');
+    $method->setAccessible(true);
 
-    $response = actingAs($user)->post(route('home.refresh'));
+    /** @var array<int, array<string, mixed>> $result */
+    $result = $method->invoke($controller, $user, false);
 
-    $response
-        ->assertOk()
-        ->assertJsonPath('success', true)
-        ->assertJsonPath('message', 'Data refreshed successfully');
+    expect($result)
+        ->toHaveCount(1)
+        ->and($result[0]['last_read_at'])->toBeString()
+        ->and(str_contains((string) $result[0]['last_read_at'], 'T'))->toBeTrue();
 });

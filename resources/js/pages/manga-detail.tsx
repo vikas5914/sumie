@@ -2,7 +2,7 @@ import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
-import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
+import { resolveImageUrl } from '../lib/image';
 
 interface Genre {
     id: number;
@@ -52,7 +52,6 @@ interface MangaDetailProps {
     auth: {
         user: {
             name: string;
-            use_image_proxy?: boolean;
         } | null;
     };
     manga: Manga;
@@ -79,12 +78,13 @@ function formatStatus(status: string): string {
     return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-function sanitizeDescriptionHtml(html: string): string {
-    return html
-        .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-        .replace(/\son\w+="[^"]*"/gi, '')
-        .replace(/\son\w+='[^']*'/gi, '')
-        .replace(/\s(href|src)=["']javascript:[^"']*["']/gi, '');
+function normalizeDescriptionText(value: string): string {
+    return value
+        .replace(/<\s*br\s*\/?>/gi, '\n')
+        .replace(/<\s*\/p\s*>/gi, '\n\n')
+        .replace(/<\s*\/li\s*>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .trim();
 }
 
 function ChapterList({ manga, libraryStatus }: { manga: Manga; libraryStatus: LibraryStatus | null }) {
@@ -135,7 +135,6 @@ function ChapterList({ manga, libraryStatus }: { manga: Manga; libraryStatus: Li
                             <Link
                                 key={chapterReadId}
                                 href={`/manga/${manga.id}/read/${chapterReadId}`}
-                                prefetch
                                 className={`group flex cursor-pointer items-center justify-between border-l-2 p-4 transition-colors hover:border-primary hover:bg-surface-dark ${
                                     isRead ? 'border-transparent' : 'border-primary'
                                 }`}
@@ -204,13 +203,12 @@ function ChapterListSkeleton() {
 export default function MangaDetail() {
     const { auth, manga, libraryStatus } = usePage<MangaDetailProps>().props;
     const userName = auth.user?.name ?? 'Operator';
-    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
     const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
-        const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
+        const resolvedImageUrl = resolveImageUrl(imageUrl);
 
         return resolvedImageUrl ? `url("${resolvedImageUrl}")` : 'none';
     };
-    const descriptionHtml = useMemo(() => sanitizeDescriptionHtml(manga.description ?? ''), [manga.description]);
+    const descriptionText = useMemo(() => normalizeDescriptionText(manga.description ?? ''), [manga.description]);
     const continueChapterId = libraryStatus?.current_chapter_id ?? manga.first_chapter_id;
     const startChapterId = manga.first_chapter_id;
     const [isBookmarked, setIsBookmarked] = useState<boolean>(Boolean(libraryStatus));
@@ -243,7 +241,6 @@ export default function MangaDetail() {
                 <Header className="z-50 flex-row items-center justify-between backdrop-blur-md">
                     <Link
                         href="/home"
-                        prefetch
                         className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-colors hover:bg-border-dark hover:text-primary active:translate-y-0.5"
                     >
                         <AppIcon name="arrow_back" />
@@ -313,7 +310,6 @@ export default function MangaDetail() {
                             {libraryStatus ? (
                                 <Link
                                     href={continueChapterId ? `/manga/${manga.id}/read/${continueChapterId}` : `/manga/${manga.id}`}
-                                    prefetch
                                     className="flex h-12 flex-1 items-center justify-center gap-2 border border-primary bg-primary text-sm font-bold text-background-dark uppercase transition-colors hover:bg-white active:translate-y-0.5"
                                 >
                                     <AppIcon name="menu_book" />
@@ -322,7 +318,6 @@ export default function MangaDetail() {
                             ) : (
                                 <Link
                                     href={startChapterId ? `/manga/${manga.id}/read/${startChapterId}` : `/manga/${manga.id}`}
-                                    prefetch
                                     className="flex h-12 flex-1 items-center justify-center gap-2 border border-primary bg-primary text-sm font-bold text-background-dark uppercase transition-colors hover:bg-white active:translate-y-0.5"
                                 >
                                     <AppIcon name="menu_book" />
@@ -344,10 +339,9 @@ export default function MangaDetail() {
 
                         <div className="mb-6 space-y-3">
                             <h3 className="border-l-2 border-primary pl-3 text-xs font-bold tracking-widest text-primary uppercase">Synopsis_Log</h3>
-                            <div
-                                className="ml-[1px] border-l border-border-dark pl-3 text-sm leading-relaxed text-zinc-400 [&_a]:text-primary [&_a]:underline [&_hr]:my-4 [&_hr]:border-border-dark [&_li]:ml-4 [&_li]:list-disc [&_p]:mb-3 [&_ul]:mb-3"
-                                dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-                            />
+                            <p className="ml-[1px] border-l border-border-dark pl-3 text-sm leading-relaxed whitespace-pre-line text-zinc-400">
+                                {descriptionText || 'No synopsis available.'}
+                            </p>
                         </div>
 
                         <div className="flex flex-wrap gap-2">
@@ -355,7 +349,6 @@ export default function MangaDetail() {
                                 <Link
                                     key={genre.id}
                                     href={`/search?q=${encodeURIComponent(genre.name)}`}
-                                    prefetch
                                     className="cursor-pointer border border-border-dark bg-surface-dark px-3 py-1.5 text-[10px] tracking-wider text-zinc-300 uppercase transition-colors hover:border-primary hover:bg-background-dark hover:text-primary"
                                 >
                                     {genre.name}

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserMangaRequest;
+use App\Http\Requests\UpdateUserMangaStatusRequest;
 use App\Models\Chapter;
 use App\Models\Manga;
 use App\Models\ReadingProgress;
@@ -13,7 +15,7 @@ use RuntimeException;
 
 class UserMangaController extends Controller
 {
-    public function store(Request $request, string $mangaId, ComickApiService $comick): RedirectResponse
+    public function store(StoreUserMangaRequest $request, string $mangaId, ComickApiService $comick): RedirectResponse
     {
         $user = $request->user();
 
@@ -23,12 +25,7 @@ class UserMangaController extends Controller
             return redirect()->back()->with('error', 'Manga not found');
         }
 
-        $status = $request->input('status', 'reading');
-        $validInitialStatuses = ['reading', 'planned'];
-
-        if (! in_array($status, $validInitialStatuses, true)) {
-            $status = 'reading';
-        }
+        $status = $request->validated('status', 'reading');
 
         // Check if already in library
         $existing = UserManga::where('user_id', $user->id)
@@ -62,15 +59,10 @@ class UserMangaController extends Controller
         return redirect()->back()->with('message', $message);
     }
 
-    public function updateStatus(Request $request, int $id): RedirectResponse
+    public function updateStatus(UpdateUserMangaStatusRequest $request, int $id): RedirectResponse
     {
         $user = $request->user();
-        $status = $request->input('status');
-
-        $validStatuses = ['reading', 'completed', 'on_hold', 'dropped', 'planned'];
-        if (! in_array($status, $validStatuses)) {
-            return redirect()->back()->with('error', 'Invalid status');
-        }
+        $status = $request->validated('status');
 
         $userManga = UserManga::where('id', $id)
             ->where('user_id', $user->id)
@@ -96,11 +88,13 @@ class UserMangaController extends Controller
             ->where('user_id', $user->id)
             ->firstOrFail();
 
+        $newFavoriteState = ! $userManga->is_favorite;
+
         $userManga->update([
-            'is_favorite' => ! $userManga->is_favorite,
+            'is_favorite' => $newFavoriteState,
         ]);
 
-        $message = $userManga->is_favorite ? 'Added to favorites' : 'Removed from favorites';
+        $message = $newFavoriteState ? 'Added to favorites' : 'Removed from favorites';
 
         return redirect()->back()->with('message', $message);
     }

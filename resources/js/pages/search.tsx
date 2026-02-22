@@ -1,11 +1,11 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import FilterTabs from '../components/FilterTabs';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
 import AppLayout from '../layouts/AppLayout';
-import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
+import { resolveImageUrl } from '../lib/image';
 
 interface SearchResult {
     id: string; // Comick slug
@@ -21,7 +21,6 @@ interface SearchProps {
     auth: {
         user: {
             name: string;
-            use_image_proxy?: boolean;
         } | null;
     };
     query: string;
@@ -71,14 +70,13 @@ function buildSearchHref(query: string, filter: string): string {
 export default function Search() {
     const { auth, query, results, filter } = usePage<SearchProps>().props;
     const userName = auth.user?.name ?? 'Operator';
-    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
     const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
-        const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
+        const resolvedImageUrl = resolveImageUrl(imageUrl);
 
         return resolvedImageUrl ? `url("${resolvedImageUrl}")` : 'none';
     };
 
-    const [isSearching, setIsSearching] = useState(false);
+    const [activeSearchRequestCount, setActiveSearchRequestCount] = useState(0);
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
     useEffect(() => {
@@ -93,6 +91,14 @@ export default function Search() {
         const normalized = (filter ?? '').toString().toLowerCase();
         return normalized === '' ? 'all' : normalized;
     }, [filter]);
+    const startSearchRequest = useCallback(() => {
+        setActiveSearchRequestCount((count) => count + 1);
+    }, []);
+    const finishSearchRequest = useCallback(() => {
+        setActiveSearchRequestCount((count) => Math.max(0, count - 1));
+    }, []);
+    const isSearching = activeSearchRequestCount > 0;
+    const shouldShowCardSkeleton = isSearching && query.trim().length >= 2;
 
     return (
         <AppLayout>
@@ -116,9 +122,16 @@ export default function Search() {
                     filter={activeFilter}
                     autoSubmit
                     only={['query', 'results', 'filter']}
-                    onSearchingChange={setIsSearching}
+                    onSearchRequestStart={startSearchRequest}
+                    onSearchRequestFinish={finishSearchRequest}
                 />
-                <FilterTabs filters={filters} activeFilter={activeFilter} getHref={(value: string) => buildSearchHref(query, value)} />
+                <FilterTabs
+                    filters={filters}
+                    activeFilter={activeFilter}
+                    getHref={(value: string) => buildSearchHref(query, value)}
+                    onSearchRequestStart={startSearchRequest}
+                    onSearchRequestFinish={finishSearchRequest}
+                />
             </Header>
 
             <main className="no-scrollbar flex-1 overflow-y-auto bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTAgNDBoNDBWMEgwdi4yaDQwdjM5LjhIMHoiIGZpbGw9IiMzMzMiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] pb-6">
@@ -130,7 +143,7 @@ export default function Search() {
                     </div>
                 )}
 
-                {isSearching && query.trim().length >= 2 && results.length === 0 && (
+                {shouldShowCardSkeleton && (
                     <section className="grid grid-cols-2 gap-4 p-4">
                         {Array.from({ length: 8 }).map((_, index) => (
                             <div key={index} className="flex flex-col gap-2">
@@ -146,7 +159,7 @@ export default function Search() {
                     </section>
                 )}
 
-                {results.length > 0 ? (
+                {!shouldShowCardSkeleton && results.length > 0 ? (
                     <section className="grid grid-cols-2 gap-4 p-4">
                         {results.map((manga) => (
                             <Link key={manga.id} href={`/manga/${manga.id}`} prefetch className="group flex cursor-pointer flex-col gap-2">
@@ -168,7 +181,7 @@ export default function Search() {
                             </Link>
                         ))}
                     </section>
-                ) : (
+                ) : !shouldShowCardSkeleton ? (
                     <div className="flex flex-1 flex-col items-center justify-center p-8">
                         <div className="border border-border-dark bg-surface-dark p-8 text-center">
                             <AppIcon name="search" className="mb-4 block text-4xl text-zinc-600" />
@@ -200,6 +213,8 @@ export default function Search() {
                                                                     preserveState: true,
                                                                     preserveScroll: true,
                                                                     only: ['query', 'results', 'filter'],
+                                                                    onStart: startSearchRequest,
+                                                                    onFinish: finishSearchRequest,
                                                                 },
                                                             )
                                                         }
@@ -215,7 +230,7 @@ export default function Search() {
                             )}
                         </div>
                     </div>
-                )}
+                ) : null}
             </main>
         </AppLayout>
     );

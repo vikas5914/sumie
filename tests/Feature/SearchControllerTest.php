@@ -278,3 +278,52 @@ it('returns proxied image urls when proxy preference is enabled', function () {
             ->where('results.0.cover_image_url', route('image.proxy', ['encodedUrl' => $encodedUrl]))
         );
 });
+
+it('reuses cached query results when switching filters', function () {
+    $user = User::factory()->create();
+
+    $comick = mock(ComickApiService::class);
+
+    $comick->shouldReceive('searchManga')->once()->andReturn(collect([
+        [
+            'id' => 'cached-manga',
+            'title' => 'Cached Manga',
+            'author' => 'A',
+            'status' => 'ongoing',
+            'genres' => ['Action'],
+            'type' => 'manga',
+            'rating_average' => 4.2,
+            'cover_image_url' => null,
+            'total_chapters' => 10,
+            'formats' => [],
+        ],
+        [
+            'id' => 'cached-completed',
+            'title' => 'Cached Completed',
+            'author' => 'B',
+            'status' => 'completed',
+            'genres' => ['Drama'],
+            'type' => 'manga',
+            'rating_average' => 4.0,
+            'cover_image_url' => null,
+            'total_chapters' => 12,
+            'formats' => [],
+        ],
+    ]));
+
+    actingAs($user)
+        ->get(route('search', ['q' => 'Cache Test']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('results', 2)
+        );
+
+    actingAs($user)
+        ->get(route('search', ['q' => 'Cache Test', 'filter' => 'completed']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filter', 'completed')
+            ->has('results', 1)
+            ->where('results.0.id', 'cached-completed')
+        );
+});

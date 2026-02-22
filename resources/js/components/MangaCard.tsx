@@ -16,10 +16,8 @@ interface MangaCardProps {
 }
 
 export default function MangaCard({ title, subtitle, imageUrl, badge, rating, href = '#', className = '' }: MangaCardProps) {
-    const shouldPrefetch = href.startsWith('/');
-
     return (
-        <Link href={href} prefetch={shouldPrefetch} className={`group flex cursor-pointer flex-col gap-2 ${className}`}>
+        <Link href={href} className={`group flex cursor-pointer flex-col gap-2 ${className}`}>
             <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"

@@ -3,14 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Services\ComickApiService;
+use App\Support\ImageUrlBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SearchController extends Controller
 {
     private const SEARCH_RESULT_LIMIT = 28;
+
+    private const SEARCH_CACHE_TTL_SECONDS = 120;
 
     public function index(Request $request, ComickApiService $comick): Response
     {
@@ -28,12 +33,7 @@ class SearchController extends Controller
 
         if ($query !== '' && mb_strlen($query) >= 2) {
             try {
-                $remote = $comick->searchManga([
-                    'title' => $query,
-                    'limit' => self::SEARCH_RESULT_LIMIT,
-                    'showall' => false,
-                    'genres_mode' => 'and',
-                ]);
+                $remote = $this->fetchSearchResults($comick, $query);
 
                 $filtered = $this->applyFilter($remote, $filter);
 
@@ -41,14 +41,19 @@ class SearchController extends Controller
                     ->map(fn (array $mangaData) => [
                         'id' => $mangaData['id'],
                         'title' => $mangaData['title'],
-                        'cover_image_url' => $this->buildImageUrl($mangaData['cover_image_url'] ?? null, $useImageProxy),
+                        'cover_image_url' => ImageUrlBuilder::build($mangaData['cover_image_url'] ?? null, $useImageProxy),
                         'author' => $mangaData['author'],
                         'rating_average' => $mangaData['rating_average'],
                         'status' => $mangaData['status'],
                         'genres' => $mangaData['genres'],
                     ])
                     ->values();
-            } catch (\Throwable) {
+            } catch (\Throwable $exception) {
+                Log::warning('Search request failed.', [
+                    'query' => $query,
+                    'filter' => $filter,
+                    'error' => $exception->getMessage(),
+                ]);
                 $results = collect();
             }
         }
@@ -60,17 +65,28 @@ class SearchController extends Controller
         ]);
     }
 
-    private function buildImageUrl(?string $imageUrl, bool $useImageProxy): ?string
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function fetchSearchResults(ComickApiService $comick, string $query): Collection
     {
-        if (! $imageUrl) {
-            return null;
-        }
+        $cacheKey = $this->buildSearchCacheKey($query);
 
-        if (! $useImageProxy) {
-            return $imageUrl;
-        }
+        $results = Cache::remember($cacheKey, now()->addSeconds(self::SEARCH_CACHE_TTL_SECONDS), function () use ($comick, $query): Collection {
+            return $comick->searchManga([
+                'title' => $query,
+                'limit' => self::SEARCH_RESULT_LIMIT,
+                'showall' => false,
+                'genres_mode' => 'and',
+            ]);
+        });
 
-        return route('image.proxy', ['encodedUrl' => base64_encode($imageUrl)]);
+        return $results instanceof Collection ? $results : collect();
+    }
+
+    private function buildSearchCacheKey(string $query): string
+    {
+        return 'search:query:'.sha1(mb_strtolower(trim($query)));
     }
 
     /**

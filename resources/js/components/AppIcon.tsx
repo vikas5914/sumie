@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils';
 import type { LucideIcon, LucideProps } from 'lucide-react';
 import {
     ArrowLeft,
@@ -34,6 +33,7 @@ import {
     User,
     X,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const iconMap: Record<string, LucideIcon> = {
     arrow_back: ArrowLeft,

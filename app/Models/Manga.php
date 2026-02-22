@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ImageUrlBuilder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -96,28 +97,12 @@ class Manga extends Model
 
     public function getCoverImageUrl(bool $useProxy = false): ?string
     {
-        if (! $this->cover_image_url) {
-            return null;
-        }
-
-        if (! $useProxy) {
-            return $this->cover_image_url;
-        }
-
-        return route('image.proxy', ['encodedUrl' => base64_encode($this->cover_image_url)]);
+        return ImageUrlBuilder::build($this->cover_image_url, $useProxy);
     }
 
     public function getBannerImageUrl(bool $useProxy = false): ?string
     {
-        if (! $this->banner_image_url) {
-            return null;
-        }
-
-        if (! $useProxy) {
-            return $this->banner_image_url;
-        }
-
-        return route('image.proxy', ['encodedUrl' => base64_encode($this->banner_image_url)]);
+        return ImageUrlBuilder::build($this->banner_image_url, $useProxy);
     }
 
     public function getComixUrl(): ?string

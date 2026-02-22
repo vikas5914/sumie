@@ -7,8 +7,10 @@ use App\Models\Manga;
 use App\Models\ReadingProgress;
 use App\Models\UserManga;
 use App\Services\ComickApiService;
+use App\Support\ImageUrlBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
@@ -95,7 +97,11 @@ class MangaController extends Controller
                         $comick = app(ComickApiService::class);
                         $chaptersFromApi = $comick->getMangaChaptersBySlug($manga->id);
                         $comick->syncChapters($manga, $chaptersFromApi);
-                    } catch (\Throwable) {
+                    } catch (\Throwable $exception) {
+                        Log::warning('Failed to sync chapters for manga detail page.', [
+                            'manga_id' => $manga->id,
+                            'error' => $exception->getMessage(),
+                        ]);
                     }
                 }
 
@@ -177,7 +183,12 @@ class MangaController extends Controller
             try {
                 $chaptersFromApi = $comick->getMangaChaptersBySlug($manga->id);
                 $comick->syncChapters($manga, $chaptersFromApi);
-            } catch (\Throwable) {
+            } catch (\Throwable $exception) {
+                Log::warning('Failed to sync chapters for manga reader page.', [
+                    'manga_id' => $manga->id,
+                    'chapter_id' => $chapterId,
+                    'error' => $exception->getMessage(),
+                ]);
             }
 
             $chapter = $manga->chapters()
@@ -285,7 +296,7 @@ class MangaController extends Controller
                 ->filter(fn (mixed $image): bool => is_array($image))
                 ->map(fn (array $image, int $index): array => [
                     'id' => $index + 1,
-                    'url' => $this->buildImageUrl((string) ($image['url'] ?? ''), $useImageProxy),
+                    'url' => ImageUrlBuilder::build((string) ($image['url'] ?? ''), $useImageProxy),
                     'width' => isset($image['width']) ? (int) $image['width'] : null,
                     'height' => isset($image['height']) ? (int) $image['height'] : null,
                 ])
@@ -307,15 +318,6 @@ class MangaController extends Controller
     private function isUpstreamNotFound(RuntimeException $exception): bool
     {
         return str_contains(strtolower($exception->getMessage()), 'not found');
-    }
-
-    private function buildImageUrl(string $imageUrl, bool $useImageProxy): string
-    {
-        if (! $useImageProxy) {
-            return $imageUrl;
-        }
-
-        return route('image.proxy', ['encodedUrl' => base64_encode($imageUrl)]);
     }
 
     private function buildSourceChapterUrl(string $mangaId, string $chapterExternalId, ?string $fallback): ?string

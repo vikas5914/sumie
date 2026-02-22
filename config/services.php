@@ -36,11 +36,7 @@ return [
     ],
 
     'comix' => [
-        'base_url' => env('COMIX_API_PROXY_BASE_URL', 'https://comix-proxy.kapadiya.net'),
-    ],
-
-    'comick' => [
-        'base_url' => env('COMIX_API_PROXY_BASE_URL', 'https://comix-proxy.kapadiya.net'),
+        'base_url' => env('COMIX_API_PROXY_BASE_URL', 'https://comix.to/api/v2'),
     ],
 
 ];

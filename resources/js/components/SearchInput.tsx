@@ -12,13 +12,22 @@ interface SearchInputProps {
     debounceMs?: number;
     minLength?: number;
     only?: string[];
-    onSearchingChange?: (isSearching: boolean) => void;
+    onSearchRequestStart?: () => void;
+    onSearchRequestFinish?: () => void;
 }
 
 type CancelToken = { cancel: () => void };
 
 function normalizeQuery(value: string): string {
     return value.replace(/\s+/g, ' ').trim();
+}
+
+function buildRequestSignature(query: string, filter?: string): string {
+    const normalizedQuery = normalizeQuery(query);
+    const normalizedFilter = (filter ?? '').toString().toLowerCase();
+    const effectiveFilter = normalizedFilter === '' ? 'all' : normalizedFilter;
+
+    return `${normalizedQuery}::${effectiveFilter}`;
 }
 
 function rememberRecentSearch(query: string, key = 'sumie:recent-searches'): void {
@@ -51,23 +60,28 @@ export default function SearchInput({
     debounceMs = 250,
     minLength = 2,
     only,
-    onSearchingChange,
+    onSearchRequestStart,
+    onSearchRequestFinish,
 }: SearchInputProps) {
     const [value, setValue] = useState(defaultValue);
-    const [isSearching, setIsSearching] = useState(false);
+    const [activeRequestCount, setActiveRequestCount] = useState(0);
 
     const debounceTimerRef = useRef<number | null>(null);
     const cancelTokenRef = useRef<CancelToken | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const lastSentQueryRef = useRef<string>('');
+    const skipNextAutoSubmitRef = useRef(false);
+    const filterRef = useRef(filter);
+    const lastSentRequestRef = useRef<string>(buildRequestSignature(defaultValue, filter));
+
+    useEffect(() => {
+        filterRef.current = filter;
+    }, [filter]);
 
     useEffect(() => {
         setValue(defaultValue);
-    }, [defaultValue]);
-
-    useEffect(() => {
-        onSearchingChange?.(isSearching);
-    }, [isSearching, onSearchingChange]);
+        lastSentRequestRef.current = buildRequestSignature(defaultValue, filter);
+        skipNextAutoSubmitRef.current = true;
+    }, [defaultValue, filter]);
 
     const submit = useCallback(
         (rawQuery: string, options: { force?: boolean } = {}) => {
@@ -83,9 +97,14 @@ export default function SearchInput({
             const data: Record<string, string> = {};
             data.q = shouldSearch ? query : '';
 
-            const normalizedFilter = (filter ?? '').toString().toLowerCase();
+            const normalizedFilter = (filterRef.current ?? '').toString().toLowerCase();
             if (normalizedFilter !== '' && normalizedFilter !== 'all') {
                 data.filter = normalizedFilter;
+            }
+
+            const requestSignature = buildRequestSignature(data.q, normalizedFilter);
+            if (!force && requestSignature === lastSentRequestRef.current) {
+                return;
             }
 
             cancelTokenRef.current?.cancel();
@@ -100,24 +119,32 @@ export default function SearchInput({
                     cancelTokenRef.current = token as unknown as CancelToken;
                 },
                 onStart: () => {
-                    setIsSearching(true);
+                    setActiveRequestCount((count) => count + 1);
+                    onSearchRequestStart?.();
                 },
                 onFinish: () => {
-                    setIsSearching(false);
+                    setActiveRequestCount((count) => Math.max(0, count - 1));
+                    onSearchRequestFinish?.();
                 },
             });
 
-            lastSentQueryRef.current = data.q;
+            lastSentRequestRef.current = requestSignature;
 
             if (query.length >= minLength) {
                 rememberRecentSearch(query);
             }
         },
-        [action, filter, minLength, only],
+        [action, minLength, onSearchRequestFinish, onSearchRequestStart, only],
     );
 
     useEffect(() => {
         if (!autoSubmit) {
+            return;
+        }
+
+        if (skipNextAutoSubmitRef.current) {
+            skipNextAutoSubmitRef.current = false;
+
             return;
         }
 
@@ -129,16 +156,12 @@ export default function SearchInput({
             const normalized = normalizeQuery(value);
 
             if (normalized.length === 0) {
-                if (lastSentQueryRef.current !== '') {
-                    submit('', { force: true });
-                }
+                submit('');
                 return;
             }
 
             if (normalized.length < minLength) {
-                if (lastSentQueryRef.current !== '') {
-                    submit('', { force: true });
-                }
+                submit('');
                 return;
             }
 
@@ -175,7 +198,7 @@ export default function SearchInput({
             />
 
             <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2">
-                {isSearching && <AppIcon name="progress_activity" className="animate-spin text-lg text-primary" />}
+                {activeRequestCount > 0 && <AppIcon name="progress_activity" className="animate-spin text-lg text-primary" />}
 
                 {value.trim().length > 0 && (
                     <button

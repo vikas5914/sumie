@@ -13,7 +13,7 @@ beforeEach(function () {
 
 it('throws on logical proxy status errors', function () {
     Http::fake([
-        'https://comix-proxy.test/api/manga*' => Http::response([
+        'https://comix-proxy.test/manga*' => Http::response([
             'status' => 500,
             'message' => 'Proxy error',
             'result' => null,
@@ -30,7 +30,7 @@ it('applies safe-search query parameters with provider-compatible genres syntax'
     Http::fake(function (Request $request) {
         $url = $request->url();
 
-        if (str_contains($url, '/api/manga?')) {
+        if (str_contains($url, '/manga?')) {
             expect($url)->toContain('keyword=solo%20leveling')
                 ->and($url)->toContain('order%5Brelevance%5D=desc')
                 ->and($url)->toContain('limit=28')
@@ -70,7 +70,7 @@ it('resolves legacy slug to hash id and maps term names', function () {
     Http::fake(function (Request $request) {
         $url = $request->url();
 
-        if (str_contains($url, '/api/manga?')) {
+        if (str_contains($url, '/manga?')) {
             return Http::response([
                 'status' => 200,
                 'result' => [
@@ -103,7 +103,7 @@ it('resolves legacy slug to hash id and maps term names', function () {
             ], 200);
         }
 
-        if (str_contains($url, '/api/manga/emqg8')) {
+        if (str_contains($url, '/manga/emqg8')) {
             return Http::response([
                 'status' => 200,
                 'result' => [
@@ -130,28 +130,28 @@ it('resolves legacy slug to hash id and maps term names', function () {
             ], 200);
         }
 
-        if (str_contains($url, '/api/terms?type=genre')) {
+        if (str_contains($url, '/terms?type=genre')) {
             return Http::response([
                 'status' => 200,
                 'result' => ['items' => [['term_id' => 6, 'title' => 'Action']]],
             ], 200);
         }
 
-        if (str_contains($url, '/api/terms?type=theme')) {
+        if (str_contains($url, '/terms?type=theme')) {
             return Http::response([
                 'status' => 200,
                 'result' => ['items' => [['term_id' => 44, 'title' => 'Magic']]],
             ], 200);
         }
 
-        if (str_contains($url, '/api/terms?type=demographic')) {
+        if (str_contains($url, '/terms?type=demographic')) {
             return Http::response([
                 'status' => 200,
                 'result' => ['items' => [['term_id' => 2, 'title' => 'Shounen']]],
             ], 200);
         }
 
-        if (str_contains($url, '/api/terms?type=format')) {
+        if (str_contains($url, '/terms?type=format')) {
             return Http::response([
                 'status' => 200,
                 'result' => ['items' => [['term_id' => 93169, 'title' => 'Oneshot']]],
@@ -179,7 +179,7 @@ it('resolves legacy slug to hash id and maps term names', function () {
 
 it('excludes nsfw manga from search feed by default', function () {
     Http::fake([
-        'https://comix-proxy.test/api/manga*' => Http::response([
+        'https://comix-proxy.test/manga*' => Http::response([
             'status' => 200,
             'result' => [
                 'items' => [
@@ -222,7 +222,7 @@ it('excludes nsfw manga from search feed by default', function () {
                 ],
             ],
         ], 200),
-        'https://comix-proxy.test/api/terms*' => Http::response([
+        'https://comix-proxy.test/terms*' => Http::response([
             'status' => 200,
             'result' => ['items' => []],
         ], 200),
@@ -239,7 +239,7 @@ it('excludes nsfw manga from search feed by default', function () {
 
 it('excludes nsfw manga from home trending feed', function () {
     Http::fake([
-        'https://comix-proxy.test/api/top*' => Http::response([
+        'https://comix-proxy.test/top*' => Http::response([
             'status' => 200,
             'result' => [
                 'items' => [
@@ -278,7 +278,7 @@ it('excludes nsfw manga from home trending feed', function () {
                 ],
             ],
         ], 200),
-        'https://comix-proxy.test/api/terms*' => Http::response([
+        'https://comix-proxy.test/terms*' => Http::response([
             'status' => 200,
             'result' => ['items' => []],
         ], 200),
@@ -295,7 +295,7 @@ it('provides chapter fallback title from provider metadata when name is missing'
     Http::fake(function (Request $request) {
         $url = $request->url();
 
-        if (str_contains($url, '/api/manga?')) {
+        if (str_contains($url, '/manga?')) {
             return Http::response([
                 'status' => 200,
                 'result' => [
@@ -311,7 +311,7 @@ it('provides chapter fallback title from provider metadata when name is missing'
             ], 200);
         }
 
-        if (str_contains($url, '/api/manga/emqg8/chapters')) {
+        if (str_contains($url, '/manga/emqg8/chapters')) {
             return Http::response([
                 'status' => 200,
                 'result' => [

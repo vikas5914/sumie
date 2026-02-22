@@ -1,11 +1,11 @@
-import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { Deferred, Head, Link, router, usePage, usePoll } from '@inertiajs/react';
+import { useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
 import UserAvatar from '../components/UserAvatar';
 import AppLayout from '../layouts/AppLayout';
-import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
+import { resolveImageUrl } from '../lib/image';
 
 interface Genre {
     id: number;
@@ -31,7 +31,7 @@ interface ContinueReading {
     current_chapter_id: string | null;
     current_chapter: number;
     progress_percentage: number;
-    last_read_at: string;
+    last_read_at: string | null;
 }
 
 interface Recommendation {
@@ -41,18 +41,11 @@ interface Recommendation {
     genres: Genre[];
 }
 
-interface HomeMeta {
-    isDataStale: boolean;
-    hasCachedData: boolean;
-    lastFetchedAt: string | null;
-}
-
 interface HomeProps {
     auth: {
         user: {
             name: string;
             avatar?: string;
-            use_image_proxy?: boolean;
         } | null;
     };
     homeFeed?: {
@@ -61,12 +54,20 @@ interface HomeProps {
         continueReading: ContinueReading[];
         recommendations: Recommendation[];
     };
-    meta: HomeMeta;
     [key: string]: unknown;
 }
 
-function timeAgo(dateString: string): string {
+function timeAgo(dateString: string | null): string {
+    if (!dateString) {
+        return 'Unknown';
+    }
+
     const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+        return 'Unknown';
+    }
+
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
@@ -78,15 +79,14 @@ function timeAgo(dateString: string): string {
 }
 
 export default function Home() {
-    const { auth, homeFeed, meta } = usePage<HomeProps>().props;
+    const { auth, homeFeed } = usePage<HomeProps>().props;
     const featuredManga = homeFeed?.featuredManga ?? null;
     const trendingManga = homeFeed?.trendingManga ?? [];
     const continueReading = homeFeed?.continueReading ?? [];
     const recommendations = homeFeed?.recommendations ?? [];
     const userName = auth.user?.name ?? 'Operator';
-    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
     const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
-        const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
+        const resolvedImageUrl = resolveImageUrl(imageUrl);
 
         return resolvedImageUrl ? `url("${resolvedImageUrl}")` : 'none';
     };
@@ -94,51 +94,13 @@ export default function Home() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [pullStartY, setPullStartY] = useState<number | null>(null);
     const [pullDistance, setPullDistance] = useState(0);
-
-    // Background refresh when data is stale
-    useEffect(() => {
-        if (meta.isDataStale && meta.hasCachedData) {
-            performBackgroundRefresh();
-        }
-    }, [meta.isDataStale, meta.hasCachedData]);
-
-    // Periodic polling for updates (every 5 minutes)
-    useEffect(() => {
-        const interval = setInterval(
-            () => {
-                if (meta.hasCachedData) {
-                    performBackgroundRefresh();
-                }
-            },
-            5 * 60 * 1000,
-        ); // 5 minutes
-
-        return () => clearInterval(interval);
-    }, [meta.hasCachedData]);
-
-    const performBackgroundRefresh = async () => {
-        if (isRefreshing) return;
-
-        try {
-            setIsRefreshing(true);
-            const response = await fetch('/home/refresh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            });
-
-            if (response.ok) {
-                // Silently reload the page to get fresh data
-                router.reload({ only: ['homeFeed', 'meta'] });
-            }
-        } catch (error) {
-            console.error('Background refresh failed:', error);
-        } finally {
-            setIsRefreshing(false);
-        }
-    };
+    usePoll(5 * 60 * 1000, {
+        only: ['homeFeed'],
+        preserveState: true,
+        preserveScroll: true,
+        onStart: () => setIsRefreshing(true),
+        onFinish: () => setIsRefreshing(false),
+    });
 
     // Pull-to-refresh handlers
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -158,7 +120,13 @@ export default function Home() {
 
     const handleTouchEnd = () => {
         if (pullDistance > 50) {
-            performBackgroundRefresh();
+            router.reload({
+                only: ['homeFeed'],
+                preserveState: true,
+                preserveScroll: true,
+                onStart: () => setIsRefreshing(true),
+                onFinish: () => setIsRefreshing(false),
+            });
         }
         setPullStartY(null);
         setPullDistance(0);
@@ -213,27 +181,12 @@ export default function Home() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
-                {/* Stale data indicator */}
-                {meta.isDataStale && meta.hasCachedData && (
-                    <div className="mx-4 mb-2 flex items-center justify-between rounded border border-yellow-600/50 bg-yellow-600/10 px-3 py-2">
-                        <span className="text-xs text-yellow-500">Data may be outdated</span>
-                        <button
-                            onClick={performBackgroundRefresh}
-                            disabled={isRefreshing}
-                            className="flex items-center gap-1 text-xs font-bold text-yellow-500"
-                        >
-                            <AppIcon name="refresh" className="text-sm" />
-                            Refresh
-                        </button>
-                    </div>
-                )}
-
                 <Deferred data="homeFeed" fallback={<HomeFeedSkeleton />}>
                     <>
                         {/* Hero Section */}
                         {featuredManga && (
                             <section className="px-4">
-                                <Link href={`/manga/${featuredManga.id}`} prefetch>
+                                <Link href={`/manga/${featuredManga.id}`}>
                                     <div className="group relative aspect-[4/3] w-full cursor-pointer overflow-hidden border border-border-dark shadow-lg">
                                         <div
                                             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
@@ -278,7 +231,7 @@ export default function Home() {
                                             : `/manga/${item.id}`;
 
                                         return (
-                                            <Link key={item.id} href={continueHref} prefetch className="flex w-[280px] flex-none snap-center">
+                                            <Link key={item.id} href={continueHref} className="flex w-[280px] flex-none snap-center">
                                                 <div className="flex w-full items-center gap-3 border border-border-dark bg-surface-dark p-3 shadow-sm">
                                                     <div
                                                         className="relative h-20 w-16 shrink-0 overflow-hidden border border-zinc-600 bg-cover bg-center"
@@ -309,7 +262,6 @@ export default function Home() {
                                         <p className="text-sm text-zinc-500">No reading history found.</p>
                                         <Link
                                             href="/search"
-                                            prefetch
                                             className="mt-2 inline-block text-sm font-bold text-primary uppercase hover:text-primary/80"
                                         >
                                             Start Reading
@@ -330,7 +282,6 @@ export default function Home() {
                                         <Link
                                             key={manga.id}
                                             href={`/manga/${manga.id}`}
-                                            prefetch
                                             className="group flex cursor-pointer flex-col gap-2"
                                         >
                                             <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
@@ -377,7 +328,6 @@ export default function Home() {
                                         <Link
                                             key={manga.id}
                                             href={`/manga/${manga.id}`}
-                                            prefetch
                                             className="group flex w-[140px] flex-none cursor-pointer snap-center flex-col gap-2"
                                         >
                                             <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">

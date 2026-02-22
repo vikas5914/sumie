@@ -11,7 +11,6 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Schema;
 
 class ComickApiService
 {
@@ -30,7 +29,7 @@ class ComickApiService
 
     public function __construct()
     {
-        $this->baseUrl = rtrim((string) config('services.comix.base_url', 'https://comix-proxy.kapadiya.net'), '/');
+        $this->baseUrl = rtrim((string) config('services.comix.base_url', 'https://comix.to/api/v2'), '/');
         $this->http = Http::withOptions([
             'timeout' => 30,
         ])->withHeaders([
@@ -79,7 +78,7 @@ class ComickApiService
             $params['order[relevance]'] = 'desc';
         }
 
-        $result = $this->requestResult('/api/manga', $params);
+        $result = $this->requestResult('/manga', $params);
 
         if (! is_array($result)) {
             throw new \RuntimeException('Unexpected Comix search response format.');
@@ -97,7 +96,7 @@ class ComickApiService
      */
     public function getTrendingManga(int $limit = 10): Collection
     {
-        $items = $this->fetchTopItems('trending', 7, $limit);
+        $items = $this->fetchTopItems('trending', 30, $limit, ['manhwa', 'manhua']);
 
         return $this->normalizeMangaCollection($items, ['showall' => false], $limit);
     }
@@ -170,7 +169,7 @@ class ComickApiService
         $lastPage = 1;
 
         do {
-            $result = $this->requestResult('/api/manga/'.$code.'/chapters', [
+            $result = $this->requestResult('/manga/'.$code.'/chapters', [
                 'limit' => 100,
                 'page' => $page,
                 'order[number]' => 'asc',
@@ -201,7 +200,7 @@ class ComickApiService
      */
     public function getChapterById(string $chapterId): array
     {
-        $result = $this->requestResult('/api/chapters/'.$chapterId);
+        $result = $this->requestResult('/chapters/'.$chapterId);
 
         if (! is_array($result)) {
             throw new \RuntimeException('Unexpected Comix chapter response format.');
@@ -230,7 +229,7 @@ class ComickApiService
             ?? new Manga;
 
         $manga->id = $mangaId;
-        $this->setIfColumnExists($manga, 'slug', $slug);
+        $manga->slug = $slug;
         $manga->title = (string) ($mangaData['title'] ?? 'Untitled');
         $manga->description = (string) ($mangaData['description'] ?? '');
         $manga->cover_image_url = $mangaData['cover_image_url'] ?? null;
@@ -241,8 +240,8 @@ class ComickApiService
         $manga->content_rating = (string) ($mangaData['content_rating'] ?? 'safe');
         $manga->genres = is_array($mangaData['genres'] ?? null) ? $mangaData['genres'] : [];
         $manga->themes = is_array($mangaData['themes'] ?? null) ? $mangaData['themes'] : [];
-        $this->setIfColumnExists($manga, 'demographics', is_array($mangaData['demographics'] ?? null) ? $mangaData['demographics'] : []);
-        $this->setIfColumnExists($manga, 'formats', is_array($mangaData['formats'] ?? null) ? $mangaData['formats'] : []);
+        $manga->demographics = is_array($mangaData['demographics'] ?? null) ? $mangaData['demographics'] : [];
+        $manga->formats = is_array($mangaData['formats'] ?? null) ? $mangaData['formats'] : [];
         $manga->total_chapters = (int) ($mangaData['total_chapters'] ?? 0);
         $manga->release_year = $this->toNullableInt($mangaData['release_year'] ?? null);
         $manga->country_of_origin = $mangaData['country_of_origin'] ?? null;
@@ -252,9 +251,9 @@ class ComickApiService
         $manga->source_name = (string) ($mangaData['source_name'] ?? 'Comix');
         $manga->source_url = $mangaData['source_url'] ?? null;
         $manga->links = is_array($mangaData['links'] ?? null) ? $mangaData['links'] : [];
-        $this->setIfColumnExists($manga, 'source_manga_id', $this->toNullableInt($mangaData['source_manga_id'] ?? null));
-        $this->setIfColumnExists($manga, 'type', isset($mangaData['type']) ? (string) $mangaData['type'] : null);
-        $this->setIfColumnExists($manga, 'is_nsfw', (bool) ($mangaData['is_nsfw'] ?? false));
+        $manga->source_manga_id = $this->toNullableInt($mangaData['source_manga_id'] ?? null);
+        $manga->type = isset($mangaData['type']) ? (string) $mangaData['type'] : null;
+        $manga->is_nsfw = (bool) ($mangaData['is_nsfw'] ?? false);
         $manga->created_at_api = $mangaData['created_at_api'] ?? null;
         $manga->updated_at_api = $mangaData['updated_at_api'] ?? null;
         $manga->last_fetched_at = now();
@@ -450,13 +449,22 @@ class ComickApiService
     /**
      * @return array<int, mixed>
      */
-    private function fetchTopItems(string $type, int $days, int $limit): array
+    /**
+     * @param  array<int, string>  $excludeTypes
+     */
+    private function fetchTopItems(string $type, int $days, int $limit, array $excludeTypes = []): array
     {
-        $result = $this->requestResult('/api/top', [
+        $query = [
             'type' => $type,
             'days' => $days,
             'limit' => $limit,
-        ]);
+        ];
+
+        if ($excludeTypes !== []) {
+            $query['exclude_types[]'] = $excludeTypes;
+        }
+
+        $result = $this->requestResult('/top', $query);
 
         if (! is_array($result)) {
             return [];
@@ -470,7 +478,7 @@ class ComickApiService
      */
     private function fetchMangaByCode(string $code): ?array
     {
-        $result = $this->requestResult('/api/manga/'.$code);
+        $result = $this->requestResult('/manga/'.$code);
 
         return is_array($result) ? $result : null;
     }
@@ -497,7 +505,7 @@ class ComickApiService
             }
         }
 
-        $result = $this->requestResult('/api/manga', [
+        $result = $this->requestResult('/manga', [
             'keyword' => $trimmedIdentifier,
             'limit' => 25,
             'page' => 1,
@@ -628,7 +636,7 @@ class ComickApiService
         try {
             /** @var array<int, string> $lookup */
             $lookup = Cache::remember("comix:terms:{$type}", now()->addHours(12), function () use ($type): array {
-                $result = $this->requestResult('/api/terms', ['type' => $type]);
+                $result = $this->requestResult('/terms', ['type' => $type]);
 
                 if (! is_array($result)) {
                     return [];
@@ -868,15 +876,6 @@ class ComickApiService
         }
 
         return null;
-    }
-
-    private function setIfColumnExists(Manga $manga, string $column, mixed $value): void
-    {
-        if (! Schema::hasColumn($manga->getTable(), $column)) {
-            return;
-        }
-
-        $manga->setAttribute($column, $value);
     }
 
     private function isNotFoundException(\RuntimeException $exception): bool

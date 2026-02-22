@@ -7,7 +7,6 @@ use App\Http\Controllers\MangaController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserMangaController;
-use App\Http\Controllers\UserPreferenceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,7 +20,6 @@ Route::middleware(['auth'])->group(function () {
     $slugPattern = '[A-Za-z0-9][A-Za-z0-9\-]*';
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::post('/home/refresh', [HomeController::class, 'refresh'])->name('home.refresh');
     Route::get('/search', [SearchController::class, 'index'])->name('search');
     Route::get('/library', [LibraryController::class, 'index'])->name('library');
     Route::get('/manga/{id}/read/{chapterId}', [MangaController::class, 'read'])->name('manga.read')
@@ -35,7 +33,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/me', function () {
         return Inertia::render('me');
     })->name('me');
-    Route::patch('/me/preferences/image-proxy', [UserPreferenceController::class, 'updateImageProxy'])->name('me.preferences.image-proxy');
 
     // Library management routes
     Route::post('/library/manga/{mangaId}', [UserMangaController::class, 'store'])->name('library.store')

@@ -9,10 +9,12 @@ interface FilterTabsProps {
     filters: FilterItem[];
     activeFilter: string;
     getHref: (value: string) => string;
+    onSearchRequestStart?: () => void;
+    onSearchRequestFinish?: () => void;
     className?: string;
 }
 
-export default function FilterTabs({ filters, activeFilter, getHref, className = '' }: FilterTabsProps) {
+export default function FilterTabs({ filters, activeFilter, getHref, onSearchRequestStart, onSearchRequestFinish, className = '' }: FilterTabsProps) {
     return (
         <div className={`grid auto-cols-fr grid-flow-col gap-2 pb-1 ${className}`}>
             {filters.map((f) => {
@@ -26,6 +28,15 @@ export default function FilterTabs({ filters, activeFilter, getHref, className =
                         preserveScroll
                         preserveState
                         replace
+                        onBefore={() => {
+                            return !isActive;
+                        }}
+                        onStart={() => {
+                            onSearchRequestStart?.();
+                        }}
+                        onFinish={() => {
+                            onSearchRequestFinish?.();
+                        }}
                         className={`inline-flex h-8 items-center justify-center border px-4 pt-px text-xs leading-[1] font-bold whitespace-nowrap uppercase transition-colors ${
                             isActive
                                 ? 'border-primary bg-primary text-black shadow-[2px_2px_0_0_rgba(255,255,255,0.2)]'

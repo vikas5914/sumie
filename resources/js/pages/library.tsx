@@ -2,7 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
-import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
+import { resolveImageUrl } from '../lib/image';
 
 interface Genre {
     id: number;
@@ -43,7 +43,6 @@ interface LibraryProps {
     auth: {
         user: {
             name: string;
-            use_image_proxy?: boolean;
         } | null;
     };
     libraryItems: LibraryItem[];
@@ -66,9 +65,8 @@ const statusOrder = ['all', 'reading', 'completed', 'on_hold', 'dropped', 'plann
 export default function Library() {
     const { auth, libraryItems, currentStatus, counts } = usePage<LibraryProps>().props;
     const userName = auth.user?.name ?? 'Operator';
-    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
     const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
-        const resolvedImageUrl = resolveImageUrl(imageUrl, useImageProxy);
+        const resolvedImageUrl = resolveImageUrl(imageUrl);
 
         return resolvedImageUrl ? `url("${resolvedImageUrl}")` : 'none';
     };
@@ -90,7 +88,6 @@ export default function Library() {
                     <div className="flex gap-2">
                         <Link
                             href="/search"
-                            prefetch
                             className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-all hover:bg-primary hover:text-black"
                         >
                             <AppIcon name="search" className="text-[20px]" />
@@ -109,7 +106,6 @@ export default function Library() {
                             <Link
                                 key={status}
                                 href={`/library?status=${status}`}
-                                prefetch
                                 only={['libraryItems', 'currentStatus', 'counts']}
                                 preserveScroll
                                 preserveState
@@ -144,7 +140,6 @@ export default function Library() {
                             <Link
                                 key={item.id}
                                 href={`/manga/${item.manga.id}`}
-                                prefetch
                                 className="group relative flex gap-4 border-b border-border-dark p-4 transition-colors hover:bg-surface-dark"
                             >
                                 <div className="relative aspect-[2/3] w-20 shrink-0 border border-border-dark bg-surface-dark">
@@ -206,7 +201,6 @@ export default function Library() {
                             <p className="mb-4 text-xs text-zinc-500">Start adding manga to your library</p>
                             <Link
                                 href="/search"
-                                prefetch
                                 className="inline-flex items-center gap-2 border border-primary bg-primary px-4 py-2 text-xs font-bold text-black uppercase transition-all hover:bg-white"
                             >
                                 <AppIcon name="search" className="text-sm" />

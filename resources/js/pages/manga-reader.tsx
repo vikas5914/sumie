@@ -1,13 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
-import { readImageProxyPreference, resolveImageUrl } from '../lib/image';
+import { resolveImageUrl } from '../lib/image';
 
 interface MangaReaderProps {
     auth: {
-        user: {
-            use_image_proxy?: boolean;
-        } | null;
+        user: Record<string, unknown> | null;
     };
     manga: {
         id: string;
@@ -37,7 +35,7 @@ interface MangaReaderProps {
 
 export default function MangaReader() {
     const { auth, manga, chapter, images, navigation, source_url } = usePage<MangaReaderProps>().props;
-    const useImageProxy = readImageProxyPreference(Boolean(auth.user?.use_image_proxy));
+
     const chapterLabel = chapter.label ?? chapter.number.toString();
 
     return (
@@ -49,7 +47,6 @@ export default function MangaReader() {
                     <div className="flex min-w-0 items-center gap-2">
                         <Link
                             href={`/manga/${manga.id}`}
-                            prefetch
                             className="flex size-9 shrink-0 items-center justify-center border border-border-dark bg-surface-dark transition-colors hover:border-primary hover:text-primary"
                         >
                             <AppIcon name="arrow_back" />
@@ -80,7 +77,7 @@ export default function MangaReader() {
                     images.map((image) => (
                         <img
                             key={image.id}
-                            src={resolveImageUrl(image.url, useImageProxy) ?? image.url}
+                            src={resolveImageUrl(image.url) ?? image.url}
                             alt={`${manga.title} Chapter ${chapterLabel} Page ${image.id}`}
                             width={image.width ?? undefined}
                             height={image.height ?? undefined}
@@ -111,7 +108,6 @@ export default function MangaReader() {
                     {navigation.previous_chapter_id ? (
                         <Link
                             href={`/manga/${manga.id}/read/${navigation.previous_chapter_id}`}
-                            prefetch
                             className="flex h-10 flex-1 items-center justify-center gap-1 border border-border-dark bg-surface-dark text-xs font-bold uppercase transition-colors hover:border-primary hover:text-primary"
                         >
                             <AppIcon name="chevron_left" className="text-base" />
@@ -125,7 +121,6 @@ export default function MangaReader() {
                     {navigation.next_chapter_id ? (
                         <Link
                             href={`/manga/${manga.id}/read/${navigation.next_chapter_id}`}
-                            prefetch
                             className="flex h-10 flex-1 items-center justify-center gap-1 border border-primary bg-primary text-xs font-bold text-background-dark uppercase transition-colors hover:bg-white"
                         >
                             Next

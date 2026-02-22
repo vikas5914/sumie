@@ -1,10 +1,23 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import AppIcon from '../components/AppIcon';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { url } = usePage();
 
     const isActive = (path: string) => url.startsWith(path);
+    const handleLibraryClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+        if (! isActive('/library')) {
+            return;
+        }
+
+        event.preventDefault();
+        router.visit('/library', {
+            fresh: true,
+            preserveState: false,
+            preserveScroll: false,
+            replace: true,
+        });
+    };
 
     return (
         <div className="min-h-screen bg-background-dark font-mono text-text-light antialiased selection:bg-primary selection:text-black">
@@ -15,7 +28,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <div className="flex h-16 items-center justify-around border-t border-border-dark bg-background-dark/95 px-2 backdrop-blur-sm">
                         <Link
                             href="/home"
-                            prefetch
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/home') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
@@ -30,7 +42,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                         <Link
                             href="/search"
-                            prefetch
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/search') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
@@ -45,6 +56,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                         <Link
                             href="/library"
+                            fresh
+                            onClick={handleLibraryClick}
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/library') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
@@ -59,7 +72,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                         <Link
                             href="/me"
-                            prefetch
                             className={`group flex h-full w-14 flex-col items-center justify-center gap-1 transition-colors ${
                                 isActive('/me') ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
