@@ -14,7 +14,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.11",
-        "nativephp/mobile": "v3.x-dev"
+        "nativephp/mobile": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -103,11 +103,5 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/NativePHP/mobile"
-        }
-    ]
+    "prefer-stable": true
 }

@@ -9,8 +9,8 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.5.0
-- inertiajs/inertia-laravel (INERTIA) - v2
+- php - 8.4.18
+- inertiajs/inertia-laravel (INERTIA_LARAVEL) - v2
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
 - laravel/wayfinder (WAYFINDER) - v0
@@ -21,10 +21,10 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v4
 - phpunit/phpunit (PHPUNIT) - v12
-- @inertiajs/react (INERTIA) - v2
+- @inertiajs/react (INERTIA_REACT) - v2
 - react (REACT) - v19
 - tailwindcss (TAILWINDCSS) - v4
-- @laravel/vite-plugin-wayfinder (WAYFINDER) - v0
+- @laravel/vite-plugin-wayfinder (WAYFINDER_VITE) - v0
 - eslint (ESLINT) - v9
 - prettier (PRETTIER) - v3
 
@@ -54,11 +54,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 ## Replies
 
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
-
-## Native Mobile Review Defaults
-
-- This project is distributed as a NativePHP mobile app. During security/code reviews, do not flag the public image proxy route as a default issue unless the user explicitly asks for a hardening pass.
-- This project intentionally disables CSRF validation globally in `bootstrap/app.php` for mobile app requests. Do not raise this as a finding unless the user asks to re-evaluate web security posture.
 
 === boost rules ===
 
@@ -137,6 +132,13 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 - Add useful array shape type definitions when appropriate.
 
+=== herd rules ===
+
+# Laravel Herd
+
+- The application is served by Laravel Herd and will be available at: `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs for the user.
+- You must not run any commands to make the site available via HTTP(S). It is always available through Laravel Herd.
+
 === tests rules ===
 
 # Test Enforcement
@@ -144,7 +146,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
 - Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
 
-=== inertia-laravel/core rules ===
+=== inertia-laravel/v2 rules ===
 
 # Inertia
 
@@ -152,8 +154,6 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Components live in `resources/js/pages` (unless specified in `vite.config.js`). Use `Inertia::render()` for server-side routing instead of Blade views.
 - ALWAYS use `search-docs` tool for version-specific Inertia documentation and updated code examples.
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia client-side patterns.
-
-=== inertia-laravel/v2 rules ===
 
 # Inertia v2
 
@@ -253,51 +253,11 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 - Query Merging: `show(1, { mergeQuery: { page: 2, sort: null } })` merges with current URL, `null` removes params.
 - Inertia: Use `.form()` with `<Form>` component or `form.submit(store())` with useForm.
 
-=== boost/core rules ===
-
-# Laravel Boost
-
-- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
-
-## Artisan
-
-- Use the `list-artisan-commands` tool when you need to call an Artisan command to double-check the available parameters.
-
-## URLs
-
-- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
-
-## Tinker / Debugging
-
-- You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
-- Use the `database-query` tool when you only need to read from the database.
-- Use the `database-schema` tool to inspect table structure before writing migrations or models.
-
-## Reading Browser Logs With the `browser-logs` Tool
-
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
-- Only recent browser logs will be useful - ignore old logs.
-
-## Searching Documentation (Critically Important)
-
-- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
-- Search the documentation before making code changes to ensure we are taking the correct approach.
-- Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
-- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
-
-### Available Search Syntax
-
-1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'.
-2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit".
-3. Quoted Phrases (Exact Position) - query="infinite scroll" - words must be adjacent and in that order.
-4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit".
-5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms.
-
 === pint/core rules ===
 
 # Laravel Pint Code Formatter
 
-- You must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
+- If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
 - Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
 
 === pest/core rules ===
@@ -328,16 +288,13 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 
 ## NativePHP Mobile
 
-
 - NativePHP Mobile is a Laravel package that enables developers to build native iOS and Android applications using PHP and native UI components.
 - NativePHP Mobile runs a full PHP runtime directly on the device with SQLite — no web server required.
 - NativePHP Mobile supports **two frontend approaches**: Livewire/Blade (PHP) or JavaScript frameworks (Vue, React, Inertia, etc.).
 - NativePHP Mobile documentation is hosted at `https://nativephp.com/docs/mobile/2/**`
 - **Before implementing any features using NativePHP Mobile, use the `web-search` tool to get the latest docs for that specific feature. The docs listing is available in <available-docs>**
 
-
 ### Identifying the Development Environment
-
 
 **IMPORTANT:** Before running commands or giving platform-specific advice, determine:
 
@@ -351,9 +308,7 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
    - **Livewire/Blade**: Look for `.blade.php` files with `wire:` directives, Livewire components in `app/Livewire/`
    - **JavaScript (Vue/React/Inertia)**: Look for `.vue`, `.jsx`, `.tsx` files, `resources/js/` with framework code, `inertiajs` in `package.json`
 
-
 ### Required Environment Variables
-
 
 **CRITICAL:** Before running `php artisan native:install`, ensure these are set in `.env`:
 
@@ -373,9 +328,7 @@ NATIVEPHP_DEVELOPMENT_TEAM=XXXXXXXXXX
 ```
 Find your Team ID in your [Apple Developer account](https://developer.apple.com/account) under 'Membership details'.
 
-
 ### PHP Usage (Livewire/Blade Projects)
-
 
 Use PHP Facades in the `Native\Mobile\Facades` namespace:
 - `Camera::getPhoto()`, `Dialog::toast()`, `Biometrics::prompt()`, etc.
@@ -384,9 +337,7 @@ Use PHP Facades in the `Native\Mobile\Facades` namespace:
 - Listen for events with `#[OnNative(EventClass::class)]` attribute on Livewire component methods
 - Use EDGE components in Blade templates for native UI (`native:bottom-nav`, `native:top-bar`, `native:side-nav`)
 
-
 ### JavaScript Usage (Vue/React/Inertia Projects)
-
 
 Import from the NativePHP JavaScript bridge library:
 ```javascript
@@ -407,9 +358,7 @@ on(Events.Camera.PhotoTaken, (payload) => { /* handle photo */ });
 // Cleanup in unmount: off(Events.Camera.PhotoTaken, handler);
 ```
 
-
 ### Event Handling (Both Stacks)
-
 
 Asynchronous operations dispatch events to both JavaScript and PHP simultaneously.
 
@@ -430,9 +379,7 @@ on(Events.Camera.PhotoTaken, ({ path }) => { /* ... */ });
 
 Custom events can extend built-in events and be passed via `->event(CustomEvent::class)` (PHP) or `.event('App\Events\Custom')` (JS).
 
-
 ### EDGE Components (Native UI)
-
 
 - EDGE (Element Definition and Generation Engine) renders Blade components as truly native UI elements.
 - Components use `native:` prefix: `native:bottom-nav`, `native:top-bar`, `native:side-nav`.
@@ -456,7 +403,6 @@ Custom events can extend built-in events and be passed via `->event(CustomEvent:
 - [https://nativephp.com/docs/mobile/2/getting-started/roadmap] Use these docs for upcoming features and planned improvements
 - [https://nativephp.com/docs/mobile/2/getting-started/support-policy] Use these docs for support policy and compatibility information
 
-
 ## The Basics
 
 - [https://nativephp.com/docs/mobile/2/the-basics/overview] Use these docs for understanding how NativePHP Mobile works, the bridge between PHP and native code, and the overall architecture
@@ -468,7 +414,6 @@ Custom events can extend built-in events and be passed via `->event(CustomEvent:
 - [https://nativephp.com/docs/mobile/2/the-basics/app-icon] Use these docs for setting up app icons for both platforms
 - [https://nativephp.com/docs/mobile/2/the-basics/assets] Use these docs for managing static assets, images, and files in your mobile app
 
-
 ## EDGE Components (Native UI)
 
 - [https://nativephp.com/docs/mobile/2/edge-components/introduction] Use these docs for understanding EDGE (Element Definition and Generation Engine), how Blade components become native UI, server-driven UI approach, and the JSON compilation process
@@ -476,7 +421,6 @@ Custom events can extend built-in events and be passed via `->event(CustomEvent:
 - [https://nativephp.com/docs/mobile/2/edge-components/top-bar] Use these docs for implementing top app bars with `native:top-bar` and `native:top-bar-action`, including titles, navigation icons, and action buttons
 - [https://nativephp.com/docs/mobile/2/edge-components/side-nav] Use these docs for implementing slide-out navigation drawers with `native:side-nav`, `native:side-nav-item`, `native:side-nav-header`, and `native:side-nav-group`
 - [https://nativephp.com/docs/mobile/2/edge-components/icons] Use these docs for available icon names and how to use icons in EDGE components
-
 
 ## APIs (Device Features)
 
@@ -495,7 +439,6 @@ Custom events can extend built-in events and be passed via `->event(CustomEvent:
 - [https://nativephp.com/docs/mobile/2/apis/haptics] Use these docs for haptic feedback with `Haptics::vibrate()` (prefer `Device::vibrate()`)
 - [https://nativephp.com/docs/mobile/2/apis/device] Use these docs for device information with `Device::getId()`, `->getInfo()`, `->getBatteryInfo()`, `->vibrate()`, `->toggleFlashlight()`
 - [https://nativephp.com/docs/mobile/2/apis/system] Use these docs for platform detection with `System::isIos()`, `System::isAndroid()`, `System::isMobile()`, `System::flashlight()`
-
 
 ## Concepts
 
