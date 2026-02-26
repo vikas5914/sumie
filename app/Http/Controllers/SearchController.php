@@ -19,7 +19,7 @@ class SearchController extends Controller
 
     public function index(Request $request, ComickApiService $comick): Response
     {
-        $useImageProxy = $request->user()?->shouldUseImageProxy() ?? false;
+        $useImageProxy = true;
         $query = trim((string) $request->query('q', ''));
         $filter = strtolower(trim((string) $request->query('filter', 'all')));
         $filter = $filter === '' ? 'all' : $filter;

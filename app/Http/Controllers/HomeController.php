@@ -22,7 +22,7 @@ class HomeController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $useImageProxy = $user?->shouldUseImageProxy() ?? false;
+        $useImageProxy = true;
 
         return Inertia::render('home', [
             'homeFeed' => Inertia::defer(function () use ($user, $useImageProxy): array {

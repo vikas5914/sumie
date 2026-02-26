@@ -213,42 +213,8 @@ it('returns empty results for short queries', function () {
         );
 });
 
-it('returns direct image urls when proxy preference is disabled', function () {
-    $user = User::factory()->create([
-        'use_image_proxy' => false,
-    ]);
-
-    $coverUrl = 'https://meo.comick.pictures/test-cover.jpg';
-
-    $comick = mock(ComickApiService::class);
-
-    $comick->shouldReceive('searchManga')->once()->andReturn(collect([
-        [
-            'id' => 'direct-url-case',
-            'title' => 'Direct URL Case',
-            'author' => 'A',
-            'status' => 'ongoing',
-            'genres' => ['Action'],
-            'type' => 'manga',
-            'rating_average' => 4.5,
-            'cover_image_url' => $coverUrl,
-            'total_chapters' => 12,
-            'formats' => [],
-        ],
-    ]));
-
-    actingAs($user)
-        ->get(route('search', ['q' => 'Direct']))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('results.0.cover_image_url', $coverUrl)
-        );
-});
-
-it('returns proxied image urls when proxy preference is enabled', function () {
-    $user = User::factory()->create([
-        'use_image_proxy' => true,
-    ]);
+it('always returns proxied image urls for search results', function () {
+    $user = User::factory()->create();
 
     $coverUrl = 'https://meo.comick.pictures/test-cover.jpg';
 

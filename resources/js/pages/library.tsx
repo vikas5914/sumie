@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useState, useRef, useEffect } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
@@ -47,6 +48,7 @@ interface LibraryProps {
     };
     libraryItems: LibraryItem[];
     currentStatus: string;
+    currentSort?: string;
     counts: LibraryCounts;
     [key: string]: unknown;
 }
@@ -60,11 +62,33 @@ const statusLabels: Record<string, string> = {
     planned: 'Planned',
 };
 
+const sortLabels: Record<string, string> = {
+    last_read: 'Last Read',
+    title_asc: 'Title A-Z',
+    title_desc: 'Title Z-A',
+    progress: 'Progress',
+    unread: 'Unread',
+    added: 'Date Added',
+};
+
 const statusOrder = ['all', 'reading', 'completed', 'on_hold', 'dropped', 'planned'];
+const LIBRARY_PAGE_SIZE = 20;
 
 export default function Library() {
-    const { auth, libraryItems, currentStatus, counts } = usePage<LibraryProps>().props;
+    const { auth, libraryItems, currentStatus, currentSort = 'last_read', counts } = usePage<LibraryProps>().props;
     const userName = auth.user?.name ?? 'Operator';
+    const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+    const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+                setIsSortDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
         const resolvedImageUrl = resolveImageUrl(imageUrl);
 
@@ -74,6 +98,15 @@ export default function Library() {
     const unreadCount = (item: LibraryItem): number => {
         return Math.max(0, item.manga.total_chapters - item.current_chapter_number);
     };
+    const [visibleItemsCount, setVisibleItemsCount] = useState(LIBRARY_PAGE_SIZE);
+
+    useEffect(() => {
+        setVisibleItemsCount(LIBRARY_PAGE_SIZE);
+    }, [libraryItems.length, currentStatus, currentSort]);
+
+    const visibleItems = libraryItems.slice(0, visibleItemsCount);
+    const hasMoreItems = visibleItemsCount < libraryItems.length;
+    const remainingItemCount = Math.max(0, libraryItems.length - visibleItemsCount);
 
     return (
         <AppLayout>
@@ -105,8 +138,8 @@ export default function Library() {
                         return (
                             <Link
                                 key={status}
-                                href={`/library?status=${status}`}
-                                only={['libraryItems', 'currentStatus', 'counts']}
+                                href={`/library?status=${status}&sort=${currentSort}`}
+                                only={['libraryItems', 'currentStatus', 'currentSort', 'counts']}
                                 preserveScroll
                                 preserveState
                                 replace
@@ -125,9 +158,33 @@ export default function Library() {
                 <div className="flex items-center justify-between border-b border-border-dark bg-background-dark px-4 py-3 text-xs text-zinc-500 uppercase">
                     <span>{libraryItems.length} ITEMS</span>
                     <div className="flex items-center gap-4">
-                        <button className="flex items-center gap-1 hover:text-primary">
-                            LAST READ <AppIcon name="arrow_drop_down" className="text-[14px]" />
-                        </button>
+                        <div className="relative" ref={sortDropdownRef}>
+                            <button
+                                onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                                className="flex items-center gap-1 hover:text-primary transition-colors"
+                            >
+                                {sortLabels[currentSort]} <AppIcon name={isSortDropdownOpen ? 'arrow_drop_up' : 'arrow_drop_down'} className="text-[14px]" />
+                            </button>
+                            {isSortDropdownOpen && (
+                                <div className="absolute right-0 top-full z-50 mt-2 w-48 border border-border-dark bg-surface-dark shadow-xl">
+                                    {Object.entries(sortLabels).map(([sortKey, label]) => (
+                                        <Link
+                                            key={sortKey}
+                                            href={`/library?status=${currentStatus}&sort=${sortKey}`}
+                                            only={['libraryItems', 'currentStatus', 'currentSort', 'counts']}
+                                            preserveScroll
+                                            preserveState
+                                            className={`block px-4 py-2 text-left transition-colors hover:bg-border-dark hover:text-white ${
+                                                currentSort === sortKey ? 'text-primary' : 'text-zinc-400'
+                                            }`}
+                                            onClick={() => setIsSortDropdownOpen(false)}
+                                        >
+                                            {label}
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                         <button className="hover:text-primary">
                             <AppIcon name="grid_view" className="text-[18px]" />
                         </button>
@@ -136,7 +193,7 @@ export default function Library() {
 
                 {libraryItems.length > 0 ? (
                     <div className="grid grid-cols-1 gap-0">
-                        {libraryItems.map((item) => (
+                        {visibleItems.map((item) => (
                             <Link
                                 key={item.id}
                                 href={`/manga/${item.manga.id}`}
@@ -210,10 +267,14 @@ export default function Library() {
                     </div>
                 )}
 
-                {libraryItems.length > 0 && (
+                {hasMoreItems && (
                     <div className="p-4">
-                        <button className="w-full border border-border-dark bg-background-dark py-4 text-sm font-bold text-zinc-500 uppercase transition-all hover:border-primary hover:bg-surface-dark hover:text-primary">
-                            // Load More Logs
+                        <button
+                            type="button"
+                            onClick={() => setVisibleItemsCount((count) => count + LIBRARY_PAGE_SIZE)}
+                            className="w-full border border-border-dark bg-background-dark py-4 text-sm font-bold text-zinc-500 uppercase transition-all hover:border-primary hover:bg-surface-dark hover:text-primary"
+                        >
+                            LOAD MORE ({remainingItemCount})
                         </button>
                     </div>
                 )}

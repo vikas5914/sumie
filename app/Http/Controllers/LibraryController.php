@@ -12,8 +12,9 @@ class LibraryController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $useImageProxy = $user?->shouldUseImageProxy() ?? false;
+        $useImageProxy = true;
         $status = $request->query('status', 'all');
+        $sort = $request->query('sort', 'last_read');
 
         // Validate status parameter
         $validStatuses = ['all', 'reading', 'completed', 'on_hold', 'dropped', 'planned'];
@@ -21,14 +22,52 @@ class LibraryController extends Controller
             $status = 'all';
         }
 
+        // Validate sort parameter
+        $validSorts = ['last_read', 'title_asc', 'title_desc', 'progress', 'unread', 'added'];
+        if (! in_array($sort, $validSorts)) {
+            $sort = 'last_read';
+        }
+
         // Get user's library entries
-        $libraryItems = UserManga::with(['manga', 'currentChapter'])
+        $query = UserManga::with(['manga', 'currentChapter'])
             ->where('user_id', $user->id)
             ->when($status !== 'all', function ($query) use ($status) {
-                $query->where('status', $status);
-            })
-            ->orderBy('last_read_at', 'desc')
-            ->get()
+                $query->where('user_mangas.status', $status);
+            });
+
+        switch ($sort) {
+            case 'title_asc':
+                $query->join('mangas', 'user_mangas.manga_id', '=', 'mangas.id')
+                    ->orderBy('mangas.title', 'asc')
+                    ->select('user_mangas.*');
+                break;
+            case 'title_desc':
+                $query->join('mangas', 'user_mangas.manga_id', '=', 'mangas.id')
+                    ->orderBy('mangas.title', 'desc')
+                    ->select('user_mangas.*');
+                break;
+            case 'progress':
+                $query->orderBy('user_mangas.progress_percentage', 'desc')
+                    ->select('user_mangas.*');
+                break;
+            case 'unread':
+                $query->join('mangas', 'user_mangas.manga_id', '=', 'mangas.id')
+                    ->leftJoin('chapters', 'user_mangas.current_chapter_id', '=', 'chapters.id')
+                    ->orderByRaw('(mangas.total_chapters - COALESCE(chapters.chapter_number, 0)) DESC')
+                    ->select('user_mangas.*');
+                break;
+            case 'added':
+                $query->orderBy('user_mangas.created_at', 'desc')
+                    ->select('user_mangas.*');
+                break;
+            case 'last_read':
+            default:
+                $query->orderBy('user_mangas.last_read_at', 'desc')
+                    ->select('user_mangas.*');
+                break;
+        }
+
+        $libraryItems = $query->get()
             ->map(function ($userManga) use ($useImageProxy) {
                 return [
                     'id' => $userManga->id,
@@ -66,6 +105,7 @@ class LibraryController extends Controller
         return Inertia::render('library', [
             'libraryItems' => $libraryItems,
             'currentStatus' => $status,
+            'currentSort' => $sort,
             'counts' => $counts,
         ]);
     }

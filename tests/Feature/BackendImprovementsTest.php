@@ -154,7 +154,6 @@ it('accepts valid status in update status request', function () {
 it('only shares essential user fields via inertia', function () {
     $user = User::factory()->create([
         'name' => 'TestUser',
-        'use_image_proxy' => true,
     ]);
 
     $comick = mock(ComickApiService::class);
@@ -166,7 +165,6 @@ it('only shares essential user fields via inertia', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user.id', $user->id)
             ->where('auth.user.name', 'TestUser')
-            ->where('auth.user.use_image_proxy', true)
             ->missingAll(['auth.user.email', 'auth.user.password', 'auth.user.remember_token'])
         );
 });

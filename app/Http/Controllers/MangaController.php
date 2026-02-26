@@ -45,7 +45,7 @@ class MangaController extends Controller
         }
 
         $user = $request->user();
-        $useImageProxy = $user?->shouldUseImageProxy() ?? false;
+        $useImageProxy = true;
 
         $userManga = null;
 
@@ -277,7 +277,7 @@ class MangaController extends Controller
         $chapterTitle = isset($chapterData['title']) && is_string($chapterData['title']) && $chapterData['title'] !== ''
             ? $chapterData['title']
             : ($chapter->title ?: 'Chapter '.$chapter->chapter_number);
-        $useImageProxy = $user?->shouldUseImageProxy() ?? false;
+        $useImageProxy = true;
 
         return Inertia::render('manga-reader', [
             'manga' => [
