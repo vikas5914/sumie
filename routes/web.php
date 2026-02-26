@@ -5,10 +5,11 @@ use App\Http\Controllers\ImageProxyController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\MangaController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserMangaController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', [OnboardingController::class, 'show'])->name('onboarding');
 Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
@@ -30,9 +31,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/manga/{id}', [MangaController::class, 'show'])->name('manga.show')
         ->where('id', $slugPattern);
 
-    Route::get('/me', function () {
-        return Inertia::render('me');
-    })->name('me');
+    Route::get('/me', [ProfileController::class, 'index'])->name('me');
+
+    Route::post('/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return redirect()->route('onboarding');
+    })->name('logout');
 
     // Library management routes
     Route::post('/library/manga/{mangaId}', [UserMangaController::class, 'store'])->name('library.store')

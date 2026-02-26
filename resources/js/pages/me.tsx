@@ -1,13 +1,67 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import UserAvatar from '../components/UserAvatar';
 import AppLayout from '../layouts/AppLayout';
-import type { SharedData } from '../types';
+
+type ReadingMode = 'vertical_scroll' | 'page_by_page';
+
+interface MeProps {
+    auth: {
+        user: {
+            name: string;
+        } | null;
+    };
+    profile: {
+        level: number;
+        member_id: string;
+        status: string;
+        joined_at: string | null;
+        environment: string;
+        stats: {
+            chapters_read: number;
+            reading_hours: number;
+            library_items: number;
+        };
+    };
+    [key: string]: unknown;
+}
+
+const READING_MODE_KEY = 'sumie:reading-mode';
 
 export default function Me() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, profile } = usePage<MeProps>().props;
     const userName = auth.user?.name ?? 'Operator';
+    const [readingMode, setReadingMode] = useState<ReadingMode>('vertical_scroll');
+    const [isSaved, setIsSaved] = useState(false);
+
+    const handleLogout = () => {
+        router.post('/logout');
+    };
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        const storedMode = window.localStorage.getItem(READING_MODE_KEY);
+
+        if (storedMode === 'vertical_scroll' || storedMode === 'page_by_page') {
+            setReadingMode(storedMode);
+        }
+    }, []);
+
+    const updateReadingMode = (mode: ReadingMode) => {
+        setReadingMode(mode);
+
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(READING_MODE_KEY, mode);
+        }
+
+        setIsSaved(true);
+        window.setTimeout(() => setIsSaved(false), 1200);
+    };
 
     return (
         <AppLayout>
@@ -26,17 +80,19 @@ export default function Me() {
                         <div className="group relative cursor-pointer">
                             <UserAvatar name={userName} size={76} className="p-0 transition-all duration-300" />
                             <div className="absolute -right-2 -bottom-2 border border-black bg-primary px-1.5 py-0.5 text-[10px] font-bold text-black shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)]">
-                                LVL.42
+                                LVL.{profile.level}
                             </div>
                         </div>
                         <div className="flex-1 pt-1">
                             <h1 className="mb-1 text-2xl leading-none font-bold tracking-tighter text-white uppercase">{userName}</h1>
-                            <p className="mb-3 text-xs font-bold tracking-wide text-zinc-500 uppercase">MEMBER_ID: #8842-XJ</p>
+                            <p className="mb-3 text-xs font-bold tracking-wide text-zinc-500 uppercase">MEMBER_ID: {profile.member_id}</p>
                             <div className="flex gap-2">
                                 <span className="cursor-default border border-primary px-2 py-0.5 text-[10px] font-bold text-primary uppercase transition-colors hover:bg-primary hover:text-black">
                                     PREMIUM
                                 </span>
-                                <span className="border border-zinc-700 px-2 py-0.5 text-[10px] font-bold text-zinc-400 uppercase">ONLINE</span>
+                                <span className="border border-zinc-700 px-2 py-0.5 text-[10px] font-bold text-zinc-400 uppercase">
+                                    {profile.status}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -44,15 +100,15 @@ export default function Me() {
                 <div className="grid grid-cols-3 divide-x divide-border-dark border-t border-border-dark">
                     <div className="group cursor-pointer p-3 text-center transition-colors hover:bg-surface-dark">
                         <p className="mb-1 text-[10px] text-zinc-500 uppercase group-hover:text-primary">READ</p>
-                        <p className="text-lg font-bold text-white">842</p>
+                        <p className="text-lg font-bold text-white">{profile.stats.chapters_read}</p>
                     </div>
                     <div className="group cursor-pointer p-3 text-center transition-colors hover:bg-surface-dark">
                         <p className="mb-1 text-[10px] text-zinc-500 uppercase group-hover:text-primary">HOURS</p>
-                        <p className="text-lg font-bold text-white">128.5</p>
+                        <p className="text-lg font-bold text-white">{profile.stats.reading_hours.toFixed(1)}</p>
                     </div>
                     <div className="group cursor-pointer p-3 text-center transition-colors hover:bg-surface-dark">
                         <p className="mb-1 text-[10px] text-zinc-500 uppercase group-hover:text-primary">LISTS</p>
-                        <p className="text-lg font-bold text-white">14</p>
+                        <p className="text-lg font-bold text-white">{profile.stats.library_items}</p>
                     </div>
                 </div>
             </Header>
@@ -60,82 +116,51 @@ export default function Me() {
             <main className="no-scrollbar flex flex-1 flex-col gap-8 overflow-y-auto px-4 pt-4 pb-8">
                 <section>
                     <div className="mb-3 flex items-center gap-2">
-                        <AppIcon name="terminal" className="text-sm text-primary" />
-                        <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">ACCOUNT_CONFIGURATION</h2>
-                    </div>
-                    <div className="border border-border-dark bg-surface-dark">
-                        <button className="group flex w-full items-center justify-between border-b border-border-dark p-4 text-left transition-colors hover:bg-zinc-800/50">
-                            <div className="flex flex-col">
-                                <span className="text-sm font-bold text-white uppercase transition-colors group-hover:text-primary">
-                                    EDIT_PROFILE
-                                </span>
-                                <span className="text-[10px] text-zinc-500 uppercase">AVATAR, BIO, USERNAME</span>
-                            </div>
-                            <AppIcon name="chevron_right" className="text-zinc-600 transition-colors group-hover:text-primary" />
-                        </button>
-                        <button className="group flex w-full items-center justify-between border-b border-border-dark p-4 text-left transition-colors hover:bg-zinc-800/50">
-                            <div className="flex flex-col">
-                                <span className="text-sm font-bold text-white uppercase transition-colors group-hover:text-primary">
-                                    SUBSCRIPTION
-                                </span>
-                                <span className="text-[10px] text-primary uppercase">PLAN: ANIME_GOD_TIER</span>
-                            </div>
-                            <AppIcon name="chevron_right" className="text-zinc-600 transition-colors group-hover:text-primary" />
-                        </button>
-                        <button className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-zinc-800/50">
-                            <div className="flex flex-col">
-                                <span className="text-sm font-bold text-white uppercase transition-colors group-hover:text-primary">SECURITY</span>
-                                <span className="text-[10px] text-zinc-500 uppercase">PASSWORD, 2FA</span>
-                            </div>
-                            <AppIcon name="chevron_right" className="text-zinc-600 transition-colors group-hover:text-primary" />
-                        </button>
-                    </div>
-                </section>
-
-                <section>
-                    <div className="mb-3 flex items-center gap-2">
                         <AppIcon name="settings_suggest" className="text-sm text-primary" />
                         <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">APP_PREFERENCES</h2>
                     </div>
                     <div className="flex flex-col border border-border-dark bg-surface-dark">
-                        <div className="flex items-center justify-between border-b border-border-dark p-4">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-sm font-bold text-white uppercase">DOWNLOADS_WIFI_ONLY</span>
-                            </div>
-                            <div className="group relative inline-flex cursor-pointer items-center">
-                                <input defaultChecked className="peer sr-only" type="checkbox" />
-                                <div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0 peer-checked:[&>div]:translate-x-5 peer-checked:[&>div]:bg-primary">
-                                    <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500 transition-all duration-200"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between border-b border-border-dark p-4">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-sm font-bold text-white uppercase">PUSH_NOTIFICATIONS</span>
-                            </div>
-                            <div className="group relative inline-flex cursor-pointer items-center">
-                                <input className="peer sr-only" type="checkbox" />
-                                <div className="relative h-5 w-10 border border-zinc-600 bg-zinc-900 transition-colors peer-checked:border-primary peer-checked:bg-zinc-900 peer-focus:ring-0 [&>div]:transition-all [&>div]:duration-200 [&>div]:peer-checked:translate-x-5 [&>div]:peer-checked:bg-primary">
-                                    <div className="absolute top-0.5 left-0.5 h-3.5 w-3.5 bg-zinc-500"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <button className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-zinc-800/50">
+                        <div className="flex w-full items-center justify-between p-4 text-left">
                             <div className="flex flex-col">
-                                <span className="text-sm font-bold text-white uppercase transition-colors group-hover:text-primary">
-                                    READING_MODE
-                                </span>
+                                <span className="text-sm font-bold text-white uppercase">READING_MODE</span>
+                                <span className="mt-1 text-[10px] tracking-wide text-zinc-500 uppercase">Applied in manga reader</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="border border-zinc-600 px-2 py-1 text-xs font-bold text-zinc-400 uppercase">VERTICAL_SCROLL</span>
-                                <AppIcon name="edit" className="text-[16px] text-zinc-600 transition-colors group-hover:text-primary" />
+                            <div className="grid grid-cols-2 gap-1 border border-border-dark bg-background-dark p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => updateReadingMode('vertical_scroll')}
+                                    className={`px-2 py-1 text-[10px] font-bold uppercase transition-colors ${
+                                        readingMode === 'vertical_scroll'
+                                            ? 'bg-primary text-black'
+                                            : 'bg-background-dark text-zinc-400 hover:text-primary'
+                                    }`}
+                                >
+                                    Vertical
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => updateReadingMode('page_by_page')}
+                                    className={`px-2 py-1 text-[10px] font-bold uppercase transition-colors ${
+                                        readingMode === 'page_by_page'
+                                            ? 'bg-primary text-black'
+                                            : 'bg-background-dark text-zinc-400 hover:text-primary'
+                                    }`}
+                                >
+                                    Paged
+                                </button>
                             </div>
-                        </button>
+                        </div>
+                        <div className="border-t border-border-dark px-4 py-2 text-[10px] tracking-wide text-zinc-500 uppercase">
+                            {isSaved ? 'Preference saved' : `Current: ${readingMode.replace('_', ' ')}`}
+                        </div>
                     </div>
                 </section>
 
                 <section className="mb-6">
-                    <button className="group relative flex w-full items-center justify-center gap-3 overflow-hidden border border-red-900/50 bg-transparent p-4 transition-all hover:border-red-500 hover:bg-red-900/10">
+                    <button
+                        onClick={handleLogout}
+                        className="group relative flex w-full items-center justify-center gap-3 overflow-hidden border border-red-900/50 bg-transparent p-4 transition-all hover:border-red-500 hover:bg-red-900/10"
+                    >
                         <AppIcon name="power_settings_new" className="text-red-700 transition-colors group-hover:text-red-500" />
                         <span className="text-sm font-bold tracking-widest text-red-700 uppercase transition-colors group-hover:text-red-500">
                             TERMINATE_SESSION
@@ -143,7 +168,9 @@ export default function Me() {
                         <div className="absolute top-0 left-0 h-full w-1 bg-red-500 opacity-0 transition-opacity group-hover:opacity-100"></div>
                     </button>
                     <div className="mt-4 text-center">
-                        <p className="text-[10px] font-bold text-zinc-700 uppercase">BUILD_ID: 8993.221-ALPHA // SERVER: TOKYO_03</p>
+                        <p className="text-[10px] font-bold text-zinc-700 uppercase">
+                            ENV: {profile.environment} // MEMBER_SINCE: {profile.joined_at ?? 'UNKNOWN'}
+                        </p>
                     </div>
                 </section>
             </main>

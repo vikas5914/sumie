@@ -1,7 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import { resolveImageUrl } from '../lib/image';
+
+type ReadingMode = 'vertical_scroll' | 'page_by_page';
+
+const READING_MODE_KEY = 'sumie:reading-mode';
 
 interface MangaReaderProps {
     auth: {
@@ -37,6 +42,20 @@ export default function MangaReader() {
     const { auth, manga, chapter, images, navigation, source_url } = usePage<MangaReaderProps>().props;
 
     const chapterLabel = chapter.label ?? chapter.number.toString();
+    const [readingMode, setReadingMode] = useState<ReadingMode>('vertical_scroll');
+    const isPageByPageMode = readingMode === 'page_by_page';
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        const storedMode = window.localStorage.getItem(READING_MODE_KEY);
+
+        if (storedMode === 'vertical_scroll' || storedMode === 'page_by_page') {
+            setReadingMode(storedMode);
+        }
+    }, []);
 
     return (
         <div className="min-h-screen bg-background-dark font-mono text-text-light antialiased selection:bg-primary selection:text-black">
@@ -55,7 +74,8 @@ export default function MangaReader() {
                             <div className="min-w-0">
                                 <h1 className="truncate text-sm font-bold uppercase">{manga.title}</h1>
                                 <p className="truncate text-[10px] tracking-wider text-primary uppercase">
-                                    Chapter {chapterLabel} {chapter.title ? `• ${chapter.title}` : ''}
+                                    Chapter {chapterLabel} {chapter.title ? `• ${chapter.title}` : ''} •{' '}
+                                    {isPageByPageMode ? 'PAGED' : 'VERTICAL'}
                                 </p>
                             </div>
                         </div>
@@ -73,7 +93,11 @@ export default function MangaReader() {
                     </div>
                 </Header>
 
-                <main className="flex w-full flex-col gap-3 px-4 py-4">
+                <main
+                    className={`flex w-full flex-col gap-3 px-4 py-4 ${
+                        isPageByPageMode ? 'h-[calc(100vh-11rem)] snap-y snap-mandatory overflow-y-auto pb-8' : ''
+                    }`}
+                >
                     {images.length > 0 ? (
                         images.map((image) => (
                             <img
@@ -84,7 +108,7 @@ export default function MangaReader() {
                                 height={image.height ?? undefined}
                                 loading="lazy"
                                 decoding="async"
-                                className="w-full border border-border-dark bg-surface-dark"
+                                className={`w-full border border-border-dark bg-surface-dark ${isPageByPageMode ? 'snap-start' : ''}`}
                             />
                         ))
                     ) : (
