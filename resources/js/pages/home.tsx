@@ -245,7 +245,10 @@ export default function Home() {
                                                             CHAPTER {item.current_chapter} - {timeAgo(item.last_read_at)}
                                                         </p>
                                                         <div className="h-1.5 w-full overflow-hidden border border-zinc-600 bg-zinc-700">
-                                                            <div className="h-full bg-primary" style={{ width: `${item.progress_percentage}%` }}></div>
+                                                            <div
+                                                                className="h-full bg-primary"
+                                                                style={{ width: `${item.progress_percentage}%` }}
+                                                            ></div>
                                                         </div>
                                                     </div>
                                                     <span className="flex size-8 shrink-0 items-center justify-center border border-primary bg-primary text-background-dark">
@@ -279,11 +282,7 @@ export default function Home() {
                             {trendingManga.length > 0 ? (
                                 <div className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3">
                                     {trendingManga.map((manga) => (
-                                        <Link
-                                            key={manga.id}
-                                            href={`/manga/${manga.id}`}
-                                            className="group flex cursor-pointer flex-col gap-2"
-                                        >
+                                        <Link key={manga.id} href={`/manga/${manga.id}`} className="group flex cursor-pointer flex-col gap-2">
                                             <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
                                                 <div
                                                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"

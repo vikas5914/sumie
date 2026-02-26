@@ -6,7 +6,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const isActive = (path: string) => url.startsWith(path);
     const handleLibraryClick = (event: React.MouseEvent) => {
-        if (! isActive('/library')) {
+        if (!isActive('/library')) {
             return;
         }
 

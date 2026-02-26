@@ -1,0 +1,53 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": true,
+  "singleQuote": true,
+  "singleAttributePerLine": false,
+  "htmlWhitespaceSensitivity": "css",
+  "printWidth": 150,
+  "sortTailwindcss": {
+    "stylesheet": "resources/css/app.css",
+    "functions": [
+      "clsx",
+      "cn"
+    ]
+  },
+  "sortImports": {
+    "order": "asc",
+    "ignoreCase": true,
+    "newlinesBetween": false,
+    "groups": [
+      [
+        "builtin",
+        "external"
+      ],
+      [
+        "internal",
+        "subpath"
+      ],
+      [
+        "parent",
+        "sibling",
+        "index"
+      ],
+      "style",
+      "unknown"
+    ]
+  },
+  "tabWidth": 4,
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "resources/js/components/ui/*",
+    "resources/views/mail/*"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/*.yml"
+      ],
+      "options": {
+        "tabWidth": 2
+      }
+    }
+  ]
+}

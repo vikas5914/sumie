@@ -161,12 +161,13 @@ export default function Library() {
                         <div className="relative" ref={sortDropdownRef}>
                             <button
                                 onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-                                className="flex items-center gap-1 hover:text-primary transition-colors"
+                                className="flex items-center gap-1 transition-colors hover:text-primary"
                             >
-                                {sortLabels[currentSort]} <AppIcon name={isSortDropdownOpen ? 'arrow_drop_up' : 'arrow_drop_down'} className="text-[14px]" />
+                                {sortLabels[currentSort]}{' '}
+                                <AppIcon name={isSortDropdownOpen ? 'arrow_drop_up' : 'arrow_drop_down'} className="text-[14px]" />
                             </button>
                             {isSortDropdownOpen && (
-                                <div className="absolute right-0 top-full z-50 mt-2 w-48 border border-border-dark bg-surface-dark shadow-xl">
+                                <div className="absolute top-full right-0 z-50 mt-2 w-48 border border-border-dark bg-surface-dark shadow-xl">
                                     {Object.entries(sortLabels).map(([sortKey, label]) => (
                                         <Link
                                             key={sortKey}

@@ -39,7 +39,7 @@ interface MangaReaderProps {
 }
 
 export default function MangaReader() {
-    const { auth, manga, chapter, images, navigation, source_url } = usePage<MangaReaderProps>().props;
+    const { manga, chapter, images, navigation, source_url } = usePage<MangaReaderProps>().props;
 
     const chapterLabel = chapter.label ?? chapter.number.toString();
     const [readingMode, setReadingMode] = useState<ReadingMode>('vertical_scroll');
@@ -74,8 +74,7 @@ export default function MangaReader() {
                             <div className="min-w-0">
                                 <h1 className="truncate text-sm font-bold uppercase">{manga.title}</h1>
                                 <p className="truncate text-[10px] tracking-wider text-primary uppercase">
-                                    Chapter {chapterLabel} {chapter.title ? `• ${chapter.title}` : ''} •{' '}
-                                    {isPageByPageMode ? 'PAGED' : 'VERTICAL'}
+                                    Chapter {chapterLabel} {chapter.title ? `• ${chapter.title}` : ''} • {isPageByPageMode ? 'PAGED' : 'VERTICAL'}
                                 </p>
                             </div>
                         </div>

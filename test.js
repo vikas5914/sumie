@@ -22,7 +22,9 @@ const fetchImage = async () => {
         });
         return response.data;
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error('Failed to fetch image.', {
+            cause: err,
+        });
     }
 };
 
