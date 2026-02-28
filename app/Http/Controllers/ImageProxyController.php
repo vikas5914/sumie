@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\ImageUrlBuilder;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Http\Request;
@@ -71,20 +72,7 @@ class ImageProxyController extends Controller
         try {
             /** @var ClientResponse $response */
             $response = Http::timeout(30)
-            ->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-                'Referer' => 'https://comix.to',
-                'Origin' => 'https://comix.to',
-                'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-                'Accept-Language' => 'en-US,en;q=0.9',
-                'Accept-Encoding' => 'gzip, deflate, br, zstd',
-                'Connection' => 'keep-alive',
-                'Sec-Fetch-Dest' => 'image',
-                'Sec-Fetch-Mode' => 'no-cors',
-                'Sec-Fetch-Site' => 'cross-site',
-                'Sec-Fetch-User' => '?1',
-                'Priority' => 'u=0, i',
-            ])
+            ->withHeaders(ImageUrlBuilder::DOWNLOAD_HEADERS)
             ->get($url);
 
             if (! $response->successful()) {

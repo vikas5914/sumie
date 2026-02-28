@@ -292,17 +292,7 @@ class MangaController extends Controller
                 'title' => $chapterTitle,
                 'page_count' => (int) ($chapterData['page_count'] ?? $chapter->page_count ?? 0),
             ],
-            'images' => collect($chapterData['images'] ?? [])
-                ->filter(fn (mixed $image): bool => is_array($image))
-                ->map(fn (array $image, int $index): array => [
-                    'id' => $index + 1,
-                    'url' => ImageUrlBuilder::build((string) ($image['url'] ?? ''), $useImageProxy),
-                    'width' => isset($image['width']) ? (int) $image['width'] : null,
-                    'height' => isset($image['height']) ? (int) $image['height'] : null,
-                ])
-                ->filter(fn (array $image): bool => $image['url'] !== '')
-                ->values()
-                ->all(),
+            'images' => $this->buildChapterImages($chapterData['images'] ?? [], $useImageProxy),
             'navigation' => [
                 'previous_chapter_id' => $previousChapter?->external_id,
                 'next_chapter_id' => $nextChapter?->external_id,
@@ -313,6 +303,30 @@ class MangaController extends Controller
                 $chapter->source_url
             ),
         ]);
+    }
+
+    /**
+     * Build chapter images with parallel downloading in NativePHP.
+     */
+    private function buildChapterImages(array $rawImages, bool $useImageProxy): array
+    {
+        $validImages = collect($rawImages)
+            ->filter(fn (mixed $image): bool => is_array($image) && ! empty($image['url']))
+            ->values();
+
+        $urls = $validImages->pluck('url')->map(fn ($url) => (string) $url)->all();
+        $builtUrls = ImageUrlBuilder::buildMany($urls, $useImageProxy);
+
+        return $validImages
+            ->map(fn (array $image, int $index): array => [
+                'id' => $index + 1,
+                'url' => $builtUrls[$index] ?? '',
+                'width' => isset($image['width']) ? (int) $image['width'] : null,
+                'height' => isset($image['height']) ? (int) $image['height'] : null,
+            ])
+            ->filter(fn (array $image): bool => $image['url'] !== '')
+            ->values()
+            ->all();
     }
 
     private function isUpstreamNotFound(RuntimeException $exception): bool
