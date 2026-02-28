@@ -11,7 +11,7 @@ interface Genre {
 }
 
 interface Manga {
-    id: string; // Comick slug
+    id: string; // Weebdex manga id
     title: string;
     cover_image_url: string;
     rating_average: number;

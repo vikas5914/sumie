@@ -8,7 +8,7 @@ import AppLayout from '../layouts/AppLayout';
 import { resolveImageUrl } from '../lib/image';
 
 interface SearchResult {
-    id: string; // Comick slug
+    id: string; // Weebdex manga id
     title: string;
     cover_image_url: string | null;
     author: string | null;
@@ -31,8 +31,7 @@ interface SearchProps {
 
 const filters = [
     { label: 'ALL', value: 'all' },
-    { label: 'MANGA', value: 'manga' },
-    { label: 'MANHWA', value: 'manhwa' },
+    { label: 'ONGOING', value: 'ongoing' },
     { label: 'COMPLETED', value: 'completed' },
     { label: 'ONESHOT', value: 'oneshot' },
 ];

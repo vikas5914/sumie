@@ -13,7 +13,7 @@ interface Genre {
 }
 
 interface Manga {
-    id: string; // Comick slug
+    id: string; // Weebdex manga id
     title: string;
     description: string;
     cover_image_url: string;
@@ -25,7 +25,7 @@ interface Manga {
 }
 
 interface ContinueReading {
-    id: string; // Comick slug
+    id: string; // Weebdex manga id
     title: string;
     cover_image_url: string;
     current_chapter_id: string | null;
@@ -35,7 +35,7 @@ interface ContinueReading {
 }
 
 interface Recommendation {
-    id: string; // Comick slug
+    id: string; // Weebdex manga id
     title: string;
     cover_image_url: string;
     genres: Genre[];

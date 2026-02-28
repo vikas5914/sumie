@@ -22,7 +22,7 @@ interface Chapter {
 }
 
 interface Manga {
-    id: string; // Comick slug
+    id: string; // Weebdex manga id
     first_chapter_id: string | null;
     title: string;
     description: string;
