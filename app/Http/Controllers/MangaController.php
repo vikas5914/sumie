@@ -6,10 +6,11 @@ use App\Models\Chapter;
 use App\Models\Manga;
 use App\Models\ReadingProgress;
 use App\Models\UserManga;
-use App\Services\ComickApiService;
+use App\Services\WeebdexApiService;
 use App\Support\ImageUrlBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,20 +18,13 @@ use RuntimeException;
 
 class MangaController extends Controller
 {
-    public function show(Request $request, string $id, ComickApiService $comick): Response|RedirectResponse
+    public function show(Request $request, string $id, WeebdexApiService $weebdex): Response|RedirectResponse
     {
         $manga = Manga::query()->find($id);
 
-        if (! $manga) {
-            $manga = Manga::query()->where('slug', $id)->first();
-
-            if ($manga) {
-                return redirect()->route('manga.show', ['id' => $manga->id], 302);
-            }
-
+        if ($manga === null || $weebdex->isStale($manga->synced_at, 360)) {
             try {
-                $mangaData = $comick->getMangaBySlug($id);
-                $manga = $comick->syncMangaToDatabase($mangaData);
+                $manga = $weebdex->syncMangaToDatabase($weebdex->getMangaById($id));
             } catch (RuntimeException $exception) {
                 if ($this->isUpstreamNotFound($exception)) {
                     abort(404, 'Manga not found');
@@ -40,8 +34,20 @@ class MangaController extends Controller
             }
         }
 
-        if ($manga->id !== $id) {
-            return redirect()->route('manga.show', ['id' => $manga->id], 302);
+        $shouldSyncChapters = $manga->chapters()->count() === 0
+            || $manga->chapters()->whereNull('synced_at')->exists()
+            || $manga->chapters()->where('synced_at', '<', now()->subMinutes(90))->exists();
+
+        if ($shouldSyncChapters) {
+            try {
+                $chaptersFromApi = $weebdex->getMangaChaptersById($manga->id);
+                $weebdex->syncChapters($manga, $chaptersFromApi);
+            } catch (\Throwable $exception) {
+                Log::warning('Failed to sync chapters for manga detail page.', [
+                    'manga_id' => $manga->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
         }
 
         $user = $request->user();
@@ -50,27 +56,26 @@ class MangaController extends Controller
         $userManga = null;
 
         if ($user) {
-            $userManga = UserManga::with('currentChapter')
+            $userManga = UserManga::query()
+                ->with('currentChapter')
                 ->where('user_id', $user->id)
                 ->where('manga_id', $manga->id)
                 ->first();
         }
 
-        $hasAnyChapters = $manga->chapters()->exists();
-        $hasLegacyChapterRows = $manga->chapters()->whereNull('external_id')->exists();
-        $hasMissingChapterTitles = $manga->chapters()
-            ->where(function ($query): void {
-                $query->whereNull('title')
-                    ->orWhere('title', '')
-                    ->orWhere('title', 'Untitled Chapter');
-            })
-            ->exists();
-        $requiresChapterSync = ! $hasAnyChapters || $hasLegacyChapterRows || $hasMissingChapterTitles;
+        $firstChapterId = $manga->chapters()
+            ->orderBy('published_at')
+            ->orderBy('id')
+            ->value('id');
 
-        $genres = collect($manga->genres ?? [])->map(fn (string $genre, int $index) => [
-            'id' => $index + 1,
-            'name' => $genre,
-        ])->values()->all();
+        $genres = collect($manga->genres ?? [])
+            ->filter(fn (mixed $genre): bool => is_string($genre))
+            ->values()
+            ->map(fn (string $genre, int $index): array => [
+                'id' => $index + 1,
+                'name' => $genre,
+            ])
+            ->all();
 
         return Inertia::render('manga-detail', [
             'manga' => [
@@ -78,87 +83,41 @@ class MangaController extends Controller
                 'title' => $manga->title,
                 'description' => $manga->description,
                 'cover_image_url' => $manga->getCoverImageUrl($useImageProxy),
-                'banner_image_url' => $manga->getBannerImageUrl($useImageProxy),
-                'author' => $manga->author,
-                'artist' => $manga->artist,
+                'banner_image_url' => null,
+                'author' => $manga->authors[0] ?? null,
+                'artist' => $manga->artists[0] ?? null,
                 'status' => $manga->status,
                 'genres' => $genres,
                 'themes' => $manga->themes ?? [],
-                'rating_average' => (float) ($manga->rating_average ?? 0),
-                'rating_count' => $manga->rating_count,
-                'total_views' => $manga->view_count,
-                'total_chapters' => $manga->total_chapters,
-                'release_year' => $manga->release_year,
-                'first_chapter_id' => $manga->chapters()->whereNotNull('external_id')->orderBy('chapter_number')->value('external_id'),
+                'rating_average' => $this->estimateRating($manga->follows_count, $manga->views_count),
+                'rating_count' => $manga->follows_count,
+                'total_views' => $manga->views_count,
+                'total_chapters' => $manga->chapters_count,
+                'release_year' => $manga->year,
+                'first_chapter_id' => $firstChapterId,
+                'is_mature' => in_array($manga->content_rating, ['erotica', 'pornographic'], true),
             ],
-            'chapters' => Inertia::defer(function () use ($manga, $requiresChapterSync) {
-                if ($requiresChapterSync) {
-                    try {
-                        $comick = app(ComickApiService::class);
-                        $chaptersFromApi = $comick->getMangaChaptersBySlug($manga->id);
-                        $comick->syncChapters($manga, $chaptersFromApi);
-                    } catch (\Throwable $exception) {
-                        Log::warning('Failed to sync chapters for manga detail page.', [
-                            'manga_id' => $manga->id,
-                            'error' => $exception->getMessage(),
-                        ]);
-                    }
-                }
-
-                return $manga->chapters()
-                    ->whereNotNull('external_id')
-                    ->orderBy('chapter_number')
-                    ->orderByDesc('release_date')
-                    ->get()
-                    ->map(fn ($chapter) => [
-                        'id' => (string) $chapter->external_id,
-                        'local_id' => $chapter->id,
-                        'external_id' => $chapter->external_id,
-                        'chapter_number' => (float) $chapter->chapter_number,
-                        'chapter_label' => $chapter->chapter_label,
-                        'title' => $chapter->title,
-                        'language' => $chapter->language,
-                        'published_at' => $chapter->release_date?->toISOString(),
-                        'is_new' => $chapter->release_date?->gt(now()->subDays(7)) ?? false,
-                    ])
-                    ->values()
-                    ->all();
+            'chapters' => Inertia::defer(function () use ($manga): array {
+                return $this->formatChaptersForView($manga->chapters()->get());
             }),
             'libraryStatus' => $userManga ? [
                 'id' => $userManga->id,
                 'status' => $userManga->status,
-                'current_chapter_id' => $userManga->currentChapter?->external_id
-                    ?? ($userManga->currentChapter?->chapter_number
-                        ? $manga->chapters()
-                            ->where('chapter_number', $userManga->currentChapter->chapter_number)
-                            ->whereNotNull('external_id')
-                            ->orderByDesc('release_date')
-                            ->value('external_id')
-                        : null),
-                'current_chapter_number' => $userManga->currentChapter?->chapter_number ?? 1,
-                'progress_percentage' => $userManga->progress_percentage,
-                'is_favorite' => $userManga->is_favorite,
+                'current_chapter_id' => $userManga->currentChapter?->id,
+                'current_chapter_number' => (float) ($userManga->currentChapter?->chapter_number ?? 1),
+                'progress_percentage' => (float) $userManga->progress_percentage,
+                'is_favorite' => (bool) $userManga->is_favorite,
             ] : null,
         ]);
     }
 
-    public function read(Request $request, string $id, string $chapterId, ComickApiService $comick): Response|RedirectResponse
+    public function read(Request $request, string $id, string $chapterId, WeebdexApiService $weebdex): Response|RedirectResponse
     {
         $manga = Manga::query()->find($id);
 
-        if (! $manga) {
-            $manga = Manga::query()->where('slug', $id)->first();
-
-            if ($manga) {
-                return redirect()->route('manga.read', [
-                    'id' => $manga->id,
-                    'chapterId' => $chapterId,
-                ], 302);
-            }
-
+        if ($manga === null || $weebdex->isStale($manga->synced_at, 360)) {
             try {
-                $mangaData = $comick->getMangaBySlug($id);
-                $manga = $comick->syncMangaToDatabase($mangaData);
+                $manga = $weebdex->syncMangaToDatabase($weebdex->getMangaById($id));
             } catch (RuntimeException $exception) {
                 if ($this->isUpstreamNotFound($exception)) {
                     abort(404, 'Manga not found');
@@ -168,21 +127,14 @@ class MangaController extends Controller
             }
         }
 
-        if ($manga->id !== $id) {
-            return redirect()->route('manga.read', [
-                'id' => $manga->id,
-                'chapterId' => $chapterId,
-            ], 302);
-        }
-
-        $chapter = $manga->chapters()
-            ->where('external_id', $chapterId)
+        $chapter = Chapter::query()
+            ->where('manga_id', $manga->id)
+            ->where('id', $chapterId)
             ->first();
 
-        if (! $chapter) {
+        if ($chapter === null) {
             try {
-                $chaptersFromApi = $comick->getMangaChaptersBySlug($manga->id);
-                $comick->syncChapters($manga, $chaptersFromApi);
+                $weebdex->syncChapters($manga, $weebdex->getMangaChaptersById($manga->id));
             } catch (\Throwable $exception) {
                 Log::warning('Failed to sync chapters for manga reader page.', [
                     'manga_id' => $manga->id,
@@ -191,32 +143,48 @@ class MangaController extends Controller
                 ]);
             }
 
-            $chapter = $manga->chapters()
-                ->where('external_id', $chapterId)
+            $chapter = Chapter::query()
+                ->where('manga_id', $manga->id)
+                ->where('id', $chapterId)
                 ->first();
         }
 
-        if (! $chapter) {
+        if ($chapter === null) {
             abort(404, 'Chapter not found');
         }
 
-        try {
-            $chapterData = $comick->getChapterById($chapterId);
-        } catch (RuntimeException $exception) {
-            if ($this->isUpstreamNotFound($exception)) {
-                abort(404, 'Chapter not found');
-            }
+        if (
+            $weebdex->isStale($chapter->synced_at, 30)
+            || ! is_string($chapter->node)
+            || $chapter->node === ''
+            || ! is_array($chapter->pages)
+            || $chapter->pages === []
+        ) {
+            try {
+                $chapter = $weebdex->syncChapterPages($chapterId, $weebdex->getChapterById($chapterId));
+            } catch (RuntimeException $exception) {
+                if ($this->isUpstreamNotFound($exception)) {
+                    abort(404, 'Chapter not found');
+                }
 
-            throw $exception;
+                throw $exception;
+            }
         }
 
         $orderedChapters = $manga->chapters()
-            ->whereNotNull('external_id')
-            ->orderBy('chapter_number')
-            ->orderBy('id')
-            ->get(['id', 'external_id', 'chapter_number']);
+            ->get(['id', 'chapter_number', 'published_at'])
+            ->sort(function (Chapter $left, Chapter $right): int {
+                $numberComparison = $this->chapterNumber($left->chapter_number) <=> $this->chapterNumber($right->chapter_number);
 
-        $currentIndex = $orderedChapters->search(fn (Chapter $item): bool => $item->external_id === $chapterId);
+                if ($numberComparison !== 0) {
+                    return $numberComparison;
+                }
+
+                return strcmp((string) $left->id, (string) $right->id);
+            })
+            ->values();
+
+        $currentIndex = $orderedChapters->search(fn (Chapter $item): bool => $item->id === $chapterId);
         $index = is_int($currentIndex) ? $currentIndex : -1;
 
         $previousChapter = $index > 0 ? $orderedChapters[$index - 1] : null;
@@ -274,10 +242,12 @@ class MangaController extends Controller
             }
         }
 
-        $chapterTitle = isset($chapterData['title']) && is_string($chapterData['title']) && $chapterData['title'] !== ''
-            ? $chapterData['title']
-            : ($chapter->title ?: 'Chapter '.$chapter->chapter_number);
+        $chapterTitle = is_string($chapter->title) && $chapter->title !== ''
+            ? $chapter->title
+            : ('Chapter '.($chapter->chapter_number ?? '?'));
+
         $useImageProxy = true;
+        $pages = is_array($chapter->pages) ? $chapter->pages : [];
 
         return Inertia::render('manga-reader', [
             'manga' => [
@@ -286,46 +256,97 @@ class MangaController extends Controller
                 'cover_image_url' => $manga->getCoverImageUrl($useImageProxy),
             ],
             'chapter' => [
-                'id' => (string) $chapterId,
-                'number' => (float) $chapter->chapter_number,
-                'label' => $chapter->chapter_label,
+                'id' => (string) $chapter->id,
+                'number' => $this->chapterNumber($chapter->chapter_number),
+                'label' => $chapter->chapter_number,
                 'title' => $chapterTitle,
-                'page_count' => (int) ($chapterData['page_count'] ?? $chapter->page_count ?? 0),
+                'page_count' => $chapter->page_count,
             ],
-            'images' => $this->buildChapterImages($chapterData['images'] ?? [], $useImageProxy),
-            'navigation' => [
-                'previous_chapter_id' => $previousChapter?->external_id,
-                'next_chapter_id' => $nextChapter?->external_id,
-            ],
-            'source_url' => $this->buildSourceChapterUrl(
-                $manga->id,
-                (string) ($chapter->external_id ?: $chapterId),
-                $chapter->source_url
+            'images' => $this->buildChapterImages(
+                (string) $chapter->id,
+                is_string($chapter->node) ? $chapter->node : null,
+                $pages,
+                $useImageProxy,
+                $weebdex
             ),
+            'navigation' => [
+                'previous_chapter_id' => $previousChapter?->id,
+                'next_chapter_id' => $nextChapter?->id,
+            ],
+            'source_url' => $this->buildSourceChapterUrl((string) $chapter->id),
         ]);
     }
 
     /**
-     * Build chapter images with parallel downloading in NativePHP.
+     * @param  array<int, mixed>  $rawPages
+     * @return array<int, array<string, mixed>>
      */
-    private function buildChapterImages(array $rawImages, bool $useImageProxy): array
-    {
-        $validImages = collect($rawImages)
-            ->filter(fn (mixed $image): bool => is_array($image) && ! empty($image['url']))
+    private function buildChapterImages(
+        string $chapterId,
+        ?string $node,
+        array $rawPages,
+        bool $useImageProxy,
+        WeebdexApiService $weebdex
+    ): array {
+        $images = collect($rawPages)
+            ->filter(fn (mixed $page): bool => is_array($page) && is_string($page['name'] ?? null) && $page['name'] !== '')
             ->values();
 
-        $urls = $validImages->pluck('url')->map(fn ($url) => (string) $url)->all();
-        $builtUrls = ImageUrlBuilder::buildMany($urls, $useImageProxy);
+        return $images
+            ->map(function (array $page, int $index) use ($chapterId, $node, $useImageProxy, $weebdex): ?array {
+                $name = (string) $page['name'];
+                $url = $weebdex->buildPageImageUrl($chapterId, $name, $node);
 
-        return $validImages
-            ->map(fn (array $image, int $index): array => [
-                'id' => $index + 1,
-                'url' => $builtUrls[$index] ?? '',
-                'width' => isset($image['width']) ? (int) $image['width'] : null,
-                'height' => isset($image['height']) ? (int) $image['height'] : null,
-            ])
-            ->filter(fn (array $image): bool => $image['url'] !== '')
+                if ($url === null) {
+                    return null;
+                }
+
+                $dimensions = is_array($page['dimensions'] ?? null) ? $page['dimensions'] : [];
+                $width = isset($dimensions[0]) && is_numeric($dimensions[0]) ? (int) $dimensions[0] : null;
+                $height = isset($dimensions[1]) && is_numeric($dimensions[1]) ? (int) $dimensions[1] : null;
+
+                return [
+                    'id' => $index + 1,
+                    'url' => ImageUrlBuilder::build($url, $useImageProxy) ?? $url,
+                    'width' => $width,
+                    'height' => $height,
+                ];
+            })
+            ->filter(fn (mixed $image): bool => is_array($image))
             ->values()
+            ->all();
+    }
+
+    /**
+     * @param  Collection<int, Chapter>  $chapters
+     * @return array<int, array<string, mixed>>
+     */
+    private function formatChaptersForView(Collection $chapters): array
+    {
+        return $chapters
+            ->sort(function (Chapter $left, Chapter $right): int {
+                $numberComparison = $this->chapterNumber($left->chapter_number) <=> $this->chapterNumber($right->chapter_number);
+
+                if ($numberComparison !== 0) {
+                    return $numberComparison;
+                }
+
+                return strcmp((string) $right->id, (string) $left->id);
+            })
+            ->values()
+            ->map(function (Chapter $chapter, int $index): array {
+                return [
+                    'id' => (string) $chapter->id,
+                    'local_id' => $index + 1,
+                    'external_id' => (string) $chapter->id,
+                    'chapter_number' => $this->chapterNumber($chapter->chapter_number),
+                    'chapter_label' => $chapter->chapter_number,
+                    'title' => $chapter->title,
+                    'language' => $chapter->language,
+                    'published_at' => $chapter->published_at?->toISOString(),
+                    'is_new' => $chapter->published_at?->gt(now()->subDays(7)) ?? false,
+                ];
+            })
             ->all();
     }
 
@@ -334,16 +355,28 @@ class MangaController extends Controller
         return str_contains(strtolower($exception->getMessage()), 'not found');
     }
 
-    private function buildSourceChapterUrl(string $mangaId, string $chapterExternalId, ?string $fallback): ?string
+    private function chapterNumber(?string $value): float
     {
-        if ($mangaId !== '' && $chapterExternalId !== '') {
-            return "https://comix.to/title/{$mangaId}/{$chapterExternalId}";
+        if (! is_string($value) || $value === '' || ! is_numeric($value)) {
+            return 0.0;
         }
 
-        if (is_string($fallback) && $fallback !== '') {
-            return $fallback;
+        return (float) $value;
+    }
+
+    private function estimateRating(int $follows, int $views): float
+    {
+        if ($follows <= 0 || $views <= 0) {
+            return 0.0;
         }
 
-        return null;
+        $ratio = min(1, $follows / max(1, $views));
+
+        return round(5 + ($ratio * 5), 2);
+    }
+
+    private function buildSourceChapterUrl(string $chapterId): string
+    {
+        return "https://weebdex.org/chapter/{$chapterId}";
     }
 }

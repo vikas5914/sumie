@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ComickApiService;
+use App\Services\WeebdexApiService;
 use App\Support\ImageUrlBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -17,15 +17,14 @@ class SearchController extends Controller
 
     private const SEARCH_CACHE_TTL_SECONDS = 120;
 
-    public function index(Request $request, ComickApiService $comick): Response
+    public function index(Request $request, WeebdexApiService $weebdex): Response
     {
         $useImageProxy = true;
         $query = trim((string) $request->query('q', ''));
         $filter = strtolower(trim((string) $request->query('filter', 'all')));
         $filter = $filter === '' ? 'all' : $filter;
-
         $filter = match ($filter) {
-            'all', 'manga', 'manhwa', 'completed', 'oneshot' => $filter,
+            'all', 'ongoing', 'completed', 'oneshot' => $filter,
             default => 'all',
         };
 
@@ -33,19 +32,18 @@ class SearchController extends Controller
 
         if ($query !== '' && mb_strlen($query) >= 2) {
             try {
-                $remote = $this->fetchSearchResults($comick, $query);
-
+                $remote = $this->fetchSearchResults($weebdex, $query);
                 $filtered = $this->applyFilter($remote, $filter);
 
                 $results = $filtered
-                    ->map(fn (array $mangaData) => [
+                    ->map(fn (array $mangaData): array => [
                         'id' => $mangaData['id'],
                         'title' => $mangaData['title'],
                         'cover_image_url' => ImageUrlBuilder::build($mangaData['cover_image_url'] ?? null, $useImageProxy),
-                        'author' => $mangaData['author'],
-                        'rating_average' => $mangaData['rating_average'],
-                        'status' => $mangaData['status'],
-                        'genres' => $mangaData['genres'],
+                        'author' => $mangaData['author'] ?? null,
+                        'rating_average' => $mangaData['rating_average'] ?? null,
+                        'status' => $mangaData['status'] ?? 'unknown',
+                        'genres' => $mangaData['genres'] ?? [],
                     ])
                     ->values();
             } catch (\Throwable $exception) {
@@ -68,16 +66,14 @@ class SearchController extends Controller
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    private function fetchSearchResults(ComickApiService $comick, string $query): Collection
+    private function fetchSearchResults(WeebdexApiService $weebdex, string $query): Collection
     {
         $cacheKey = $this->buildSearchCacheKey($query);
 
-        $results = Cache::remember($cacheKey, now()->addSeconds(self::SEARCH_CACHE_TTL_SECONDS), function () use ($comick, $query): Collection {
-            return $comick->searchManga([
+        $results = Cache::remember($cacheKey, now()->addSeconds(self::SEARCH_CACHE_TTL_SECONDS), function () use ($weebdex, $query): Collection {
+            return $weebdex->searchManga([
                 'title' => $query,
                 'limit' => self::SEARCH_RESULT_LIMIT,
-                'showall' => false,
-                'genres_mode' => 'and',
             ]);
         });
 
@@ -104,22 +100,14 @@ class SearchController extends Controller
                 return ($manga['status'] ?? null) === 'completed';
             }
 
-            if ($filter === 'manga') {
-                return strtolower((string) ($manga['type'] ?? '')) === 'manga';
-            }
-
-            if ($filter === 'manhwa') {
-                return strtolower((string) ($manga['type'] ?? '')) === 'manhwa';
+            if ($filter === 'ongoing') {
+                return ($manga['status'] ?? null) === 'ongoing';
             }
 
             if ($filter === 'oneshot') {
                 $totalChapters = (int) ($manga['total_chapters'] ?? 0);
-                $formats = is_array($manga['formats'] ?? null) ? $manga['formats'] : [];
-                $hasOneshotFormat = collect($formats)->contains(function ($format): bool {
-                    return in_array(strtolower((string) $format), ['oneshot', 'one shot'], true);
-                });
 
-                return $totalChapters <= 1 || $hasOneshotFormat;
+                return $totalChapters <= 1;
             }
 
             return true;

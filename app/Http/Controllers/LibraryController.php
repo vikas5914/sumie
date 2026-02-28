@@ -53,7 +53,7 @@ class LibraryController extends Controller
             case 'unread':
                 $query->join('mangas', 'user_mangas.manga_id', '=', 'mangas.id')
                     ->leftJoin('chapters', 'user_mangas.current_chapter_id', '=', 'chapters.id')
-                    ->orderByRaw('(mangas.total_chapters - COALESCE(chapters.chapter_number, 0)) DESC')
+                    ->orderByRaw('(mangas.chapters_count - COALESCE(CAST(chapters.chapter_number AS REAL), 0)) DESC')
                     ->select('user_mangas.*');
                 break;
             case 'added':
@@ -75,11 +75,11 @@ class LibraryController extends Controller
                         'id' => $userManga->manga->id,
                         'title' => $userManga->manga->title,
                         'cover_image_url' => $userManga->manga->getCoverImageUrl($useImageProxy),
-                        'total_chapters' => $userManga->manga->total_chapters,
+                        'total_chapters' => $userManga->manga->chapters_count,
                     ],
                     'status' => $userManga->status,
-                    'current_chapter_number' => $userManga->currentChapter?->chapter_number ?? 1,
-                    'progress_percentage' => $userManga->progress_percentage,
+                    'current_chapter_number' => (float) ($userManga->currentChapter?->chapter_number ?? 1),
+                    'progress_percentage' => (float) $userManga->progress_percentage,
                     'is_favorite' => $userManga->is_favorite,
                     'last_read_at' => $userManga->last_read_at,
                     'updated_at' => $userManga->updated_at,

@@ -8,27 +8,27 @@ use App\Models\Chapter;
 use App\Models\Manga;
 use App\Models\ReadingProgress;
 use App\Models\UserManga;
-use App\Services\ComickApiService;
+use App\Services\WeebdexApiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
 
 class UserMangaController extends Controller
 {
-    public function store(StoreUserMangaRequest $request, string $mangaId, ComickApiService $comick): RedirectResponse
+    public function store(StoreUserMangaRequest $request, string $mangaId, WeebdexApiService $weebdex): RedirectResponse
     {
         $user = $request->user();
 
         try {
-            $manga = $this->resolveManga($mangaId, $comick);
+            $manga = $this->resolveManga($mangaId, $weebdex);
         } catch (RuntimeException) {
             return redirect()->back()->with('error', 'Manga not found');
         }
 
         $status = $request->validated('status', 'reading');
 
-        // Check if already in library
-        $existing = UserManga::where('user_id', $user->id)
+        $existing = UserManga::query()
+            ->where('user_id', $user->id)
             ->where('manga_id', $manga->id)
             ->first();
 
@@ -36,14 +36,26 @@ class UserMangaController extends Controller
             return redirect()->back()->with('message', 'Already in your library');
         }
 
-        // Get first chapter
-        $firstChapter = Chapter::where('manga_id', $manga->id)
-            ->orderBy('chapter_number')
+        $firstChapter = Chapter::query()
+            ->where('manga_id', $manga->id)
+            ->orderBy('published_at')
+            ->orderBy('id')
             ->first();
+
+        if ($firstChapter === null) {
+            $chapters = $weebdex->getMangaChaptersById($manga->id);
+            $weebdex->syncChapters($manga, $chapters);
+
+            $firstChapter = Chapter::query()
+                ->where('manga_id', $manga->id)
+                ->orderBy('published_at')
+                ->orderBy('id')
+                ->first();
+        }
 
         $isReadingNow = $status === 'reading';
 
-        UserManga::create([
+        UserManga::query()->create([
             'user_id' => $user->id,
             'manga_id' => $manga->id,
             'status' => $status,
@@ -64,7 +76,8 @@ class UserMangaController extends Controller
         $user = $request->user();
         $status = $request->validated('status');
 
-        $userManga = UserManga::where('id', $id)
+        $userManga = UserManga::query()
+            ->where('id', $id)
             ->where('user_id', $user->id)
             ->firstOrFail();
 
@@ -84,7 +97,8 @@ class UserMangaController extends Controller
     {
         $user = $request->user();
 
-        $userManga = UserManga::where('id', $id)
+        $userManga = UserManga::query()
+            ->where('id', $id)
             ->where('user_id', $user->id)
             ->firstOrFail();
 
@@ -99,12 +113,12 @@ class UserMangaController extends Controller
         return redirect()->back()->with('message', $message);
     }
 
-    public function toggleBookmark(Request $request, string $mangaId, ComickApiService $comick): RedirectResponse
+    public function toggleBookmark(Request $request, string $mangaId, WeebdexApiService $weebdex): RedirectResponse
     {
         $user = $request->user();
 
         try {
-            $manga = $this->resolveManga($mangaId, $comick);
+            $manga = $this->resolveManga($mangaId, $weebdex);
         } catch (RuntimeException) {
             return redirect()->back()->with('error', 'Manga not found');
         }
@@ -137,25 +151,25 @@ class UserMangaController extends Controller
         return redirect()->back()->with('message', 'Bookmarked');
     }
 
-    private function resolveManga(string $mangaId, ComickApiService $comick): Manga
+    private function resolveManga(string $mangaId, WeebdexApiService $weebdex): Manga
     {
-        $existing = Manga::query()->find($mangaId)
-            ?? Manga::query()->where('slug', $mangaId)->first();
+        $existing = Manga::query()->find($mangaId);
 
-        if ($existing) {
+        if ($existing && ! $weebdex->isStale($existing->synced_at, 360)) {
             return $existing;
         }
 
-        $mangaData = $comick->getMangaBySlug($mangaId);
+        $mangaData = $weebdex->getMangaById($mangaId);
 
-        return $comick->syncMangaToDatabase($mangaData);
+        return $weebdex->syncMangaToDatabase($mangaData);
     }
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
         $user = $request->user();
 
-        $userManga = UserManga::where('id', $id)
+        $userManga = UserManga::query()
+            ->where('id', $id)
             ->where('user_id', $user->id)
             ->firstOrFail();
 

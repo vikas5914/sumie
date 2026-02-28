@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserManga;
-use App\Services\ComickApiService;
+use App\Services\WeebdexApiService;
 use App\Support\ImageUrlBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +16,7 @@ class HomeController extends Controller
     private const TRENDING_CACHE_TTL_MINUTES = 10;
 
     public function __construct(
-        private ComickApiService $comickApi
+        private WeebdexApiService $weebdexApi
     ) {}
 
     public function index(Request $request): Response
@@ -33,26 +33,28 @@ class HomeController extends Controller
                     'featuredManga' => $this->getFeaturedManga($trendingManga),
                     'trendingManga' => $trendingManga,
                     'continueReading' => $continueReading,
-                    'recommendations' => $this->getRecommendations($user, $continueReading, $trendingManga),
+                    'recommendations' => [],
                 ];
             }, 'home-feed'),
         ]);
     }
 
     /**
-     * Get featured manga for hero section.
+     * @param  array<int, array<string, mixed>>  $trendingManga
+     * @return array<string, mixed>|null
      */
     private function getFeaturedManga(array $trendingManga): ?array
     {
-        if (empty($trendingManga)) {
+        if ($trendingManga === []) {
             return null;
         }
 
+        /** @var array<string, mixed>|null $featured */
         $featured = collect($trendingManga)
-            ->sortByDesc('rating_average')
+            ->sortByDesc(fn (array $manga): float => (float) ($manga['rating_average'] ?? 0))
             ->first();
 
-        if (! $featured) {
+        if (! is_array($featured)) {
             return null;
         }
 
@@ -61,7 +63,7 @@ class HomeController extends Controller
             'title' => $featured['title'],
             'description' => $featured['description'] ?? '',
             'cover_image_url' => $featured['cover_image_url'] ?? null,
-            'banner_image_url' => $featured['banner_image_url'] ?? null,
+            'banner_image_url' => null,
             'rating_average' => $featured['rating_average'] ?? null,
             'total_chapters' => $featured['total_chapters'] ?? 0,
             'genres' => $featured['genres'] ?? [],
@@ -69,42 +71,52 @@ class HomeController extends Controller
     }
 
     /**
-     * Get trending manga from the upstream API with caching.
+     * @return array<int, array<string, mixed>>
      */
     private function getTrendingManga(bool $useImageProxy): array
     {
         $rawTrending = $this->fetchTrendingManga();
 
         return collect($rawTrending)
-            ->map(fn (array $manga): array => [
-                'id' => $manga['id'],
-                'title' => $manga['title'],
-                'description' => $manga['description'] ?? '',
-                'cover_image_url' => ImageUrlBuilder::build($manga['cover_image_url'] ?? null, $useImageProxy),
-                'banner_image_url' => ImageUrlBuilder::build($manga['banner_image_url'] ?? null, $useImageProxy),
-                'rating_average' => $manga['rating_average'] ?? null,
-                'total_chapters' => $manga['total_chapters'] ?? 0,
-                'genres' => $manga['genres'] ?? [],
-                'status' => $manga['status'] ?? 'unknown',
-            ])
+            ->map(function (array $manga) use ($useImageProxy): array {
+                $genres = collect($manga['genres'] ?? [])
+                    ->filter(fn (mixed $genre): bool => is_string($genre) && $genre !== '')
+                    ->values()
+                    ->map(fn (string $name, int $index): array => [
+                        'id' => $index + 1,
+                        'name' => $name,
+                    ])
+                    ->all();
+
+                return [
+                    'id' => $manga['id'],
+                    'title' => $manga['title'],
+                    'description' => $manga['description'] ?? '',
+                    'cover_image_url' => ImageUrlBuilder::build($manga['cover_image_url'] ?? null, $useImageProxy),
+                    'banner_image_url' => null,
+                    'rating_average' => $manga['rating_average'] ?? null,
+                    'total_chapters' => $manga['total_chapters'] ?? 0,
+                    'genres' => $genres,
+                    'status' => $manga['status'] ?? 'unknown',
+                ];
+            })
             ->values()
             ->toArray();
     }
 
     /**
-     * Fetch trending manga with a cache layer.
+     * @return array<int, array<string, mixed>>
      */
     private function fetchTrendingManga(): array
     {
         try {
             return Cache::remember('home:trending', now()->addMinutes(self::TRENDING_CACHE_TTL_MINUTES), function (): array {
-                return $this->comickApi->getTrendingManga(12)
+                return $this->weebdexApi->getTrendingManga(12)
                     ->map(fn (array $mangaData): array => [
                         'id' => $mangaData['id'],
                         'title' => $mangaData['title'],
                         'description' => $mangaData['description'] ?? '',
                         'cover_image_url' => $mangaData['cover_image_url'] ?? null,
-                        'banner_image_url' => $mangaData['banner_image_url'] ?? null,
                         'status' => $mangaData['status'] ?? 'unknown',
                         'genres' => $mangaData['genres'] ?? [],
                         'rating_average' => $mangaData['rating_average'] ?? null,
@@ -123,9 +135,9 @@ class HomeController extends Controller
     }
 
     /**
-     * Get continue reading section.
+     * @return array<int, array<string, mixed>>
      */
-    private function getContinueReading($user, bool $useImageProxy): array
+    private function getContinueReading(mixed $user, bool $useImageProxy): array
     {
         if (! $user) {
             return [];
@@ -138,50 +150,24 @@ class HomeController extends Controller
             ->orderBy('last_read_at', 'desc')
             ->take(5)
             ->get()
-            ->map(fn ($userManga) => [
-                'id' => $userManga->manga->id,
-                'title' => $userManga->manga->title,
-                'cover_image_url' => $userManga->manga->getCoverImageUrl($useImageProxy),
-                'genres' => $userManga->manga->genres,
-                'current_chapter_id' => $userManga->currentChapter?->external_id,
-                'current_chapter' => $userManga->currentChapter?->chapter_number ?? 1,
-                'progress_percentage' => $userManga->progress_percentage,
-                'last_read_at' => $userManga->last_read_at?->toISOString(),
-            ])
-            ->toArray();
-    }
+            ->filter(fn (UserManga $userManga): bool => $userManga->manga !== null)
+            ->map(function (UserManga $userManga) use ($useImageProxy): array {
+                $genres = collect($userManga->manga->genres ?? [])
+                    ->filter(fn (mixed $genre): bool => is_string($genre) && $genre !== '')
+                    ->values()
+                    ->all();
 
-    /**
-     * Get recommendations based on reading history.
-     */
-    private function getRecommendations($user, array $continueReading, array $trendingManga): array
-    {
-        if (! $user || empty($continueReading)) {
-            return [];
-        }
-
-        $userGenres = collect($continueReading)
-            ->pluck('genres')
-            ->flatten()
-            ->unique()
-            ->take(3);
-
-        $excludedIds = collect($continueReading)->pluck('id');
-
-        return collect($trendingManga)
-            ->reject(fn (array $manga) => $excludedIds->contains($manga['id']))
-            ->filter(function (array $manga) use ($userGenres): bool {
-                $mangaGenres = collect($manga['genres'] ?? []);
-
-                return $mangaGenres->intersect($userGenres)->isNotEmpty();
+                return [
+                    'id' => $userManga->manga->id,
+                    'title' => $userManga->manga->title,
+                    'cover_image_url' => $userManga->manga->getCoverImageUrl($useImageProxy),
+                    'genres' => $genres,
+                    'current_chapter_id' => $userManga->currentChapter?->id,
+                    'current_chapter' => (float) ($userManga->currentChapter?->chapter_number ?? 1),
+                    'progress_percentage' => (float) $userManga->progress_percentage,
+                    'last_read_at' => $userManga->last_read_at?->toISOString(),
+                ];
             })
-            ->take(3)
-            ->map(fn (array $manga): array => [
-                'id' => $manga['id'],
-                'title' => $manga['title'],
-                'cover_image_url' => $manga['cover_image_url'] ?? null,
-                'genres' => $manga['genres'] ?? [],
-            ])
             ->values()
             ->toArray();
     }

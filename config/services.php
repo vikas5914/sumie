@@ -35,8 +35,8 @@ return [
         ],
     ],
 
-    'comix' => [
-        'base_url' => env('COMIX_API_PROXY_BASE_URL', 'https://comix.to/api/v2'),
+    'weebdex' => [
+        'base_url' => env('WEEBDEX_API_BASE_URL', 'https://api.weebdex.org'),
     ],
 
 ];
