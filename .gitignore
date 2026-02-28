@@ -3,6 +3,8 @@
 /node_modules
 /public/build
 /public/hot
+/public/ios-hot
+/public/android-hot
 /public/storage
 /resources/js/actions
 /resources/js/routes
