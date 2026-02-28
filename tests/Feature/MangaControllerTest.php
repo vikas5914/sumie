@@ -4,166 +4,101 @@ use App\Models\Chapter;
 use App\Models\Manga;
 use App\Models\User;
 use App\Models\UserManga;
-use App\Services\ComickApiService;
+use App\Services\WeebdexApiService;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\mock;
 
-it('fetches missing manga from api and syncs chapters', function () {
+it('fetches missing manga from api and renders detail page', function () {
     $user = User::factory()->create();
 
     $manga = Manga::factory()->make([
-        'id' => '93q1r',
-        'slug' => 'the-summoner-apocalypse-rewinds',
-        'title' => 'The Summoner: Apocalypse Rewinds',
-        'genres' => ['Action'],
-        'themes' => [],
-        'view_count' => 100,
+        'id' => '93q1r00001',
+        'title' => 'The Summoner',
+        'synced_at' => now(),
     ]);
 
-    $comick = mock(ComickApiService::class);
-
-    $comick->shouldReceive('getMangaBySlug')->once()->with('93q1r')->andReturn([
-        'id' => '93q1r',
-        'slug' => 'the-summoner-apocalypse-rewinds',
-        'title' => 'The Summoner: Apocalypse Rewinds',
+    $weebdex = mock(WeebdexApiService::class);
+    $weebdex->shouldReceive('getMangaById')->once()->with('93q1r00001')->andReturn([
+        'id' => '93q1r00001',
+        'title' => 'The Summoner',
+        'description' => 'desc',
+        'status' => 'ongoing',
     ]);
-    $comick->shouldReceive('syncMangaToDatabase')->once()->andReturn($manga);
-    $comick->shouldNotReceive('getMangaChaptersBySlug');
-    $comick->shouldNotReceive('syncChapters');
+    $weebdex->shouldReceive('syncMangaToDatabase')->once()->andReturn($manga);
+    $weebdex->shouldReceive('getMangaChaptersById')->once()->with('93q1r00001')->andReturn(collect());
+    $weebdex->shouldReceive('syncChapters')->once()->with($manga, \Mockery::type(\Illuminate\Support\Collection::class));
 
-    $response = actingAs($user)->get(route('manga.show', ['id' => '93q1r']));
-
-    $response
+    actingAs($user)
+        ->get(route('manga.show', ['id' => '93q1r00001']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('manga-detail')
-            ->where('manga.id', '93q1r')
-            ->where('manga.title', 'The Summoner: Apocalypse Rewinds')
+            ->where('manga.id', '93q1r00001')
+            ->where('manga.title', 'The Summoner')
         );
-});
-
-it('redirects legacy slug URL to canonical hash id URL', function () {
-    $user = User::factory()->create();
-
-    $manga = Manga::factory()->create([
-        'id' => '93q1r',
-        'slug' => 'the-summoner-apocalypse-rewinds',
-    ]);
-
-    $comick = mock(ComickApiService::class);
-    $comick->shouldNotReceive('getMangaBySlug');
-    $comick->shouldNotReceive('syncMangaToDatabase');
-
-    actingAs($user)
-        ->get(route('manga.show', ['id' => $manga->slug]))
-        ->assertRedirect(route('manga.show', ['id' => '93q1r']));
 });
 
 it('returns not found when upstream manga fetch fails', function () {
     $user = User::factory()->create();
 
-    $comick = mock(ComickApiService::class);
-    $comick->shouldReceive('getMangaBySlug')->once()->with('missing-slug')->andThrow(new RuntimeException('Not found'));
+    $weebdex = mock(WeebdexApiService::class);
+    $weebdex->shouldReceive('getMangaById')->once()->with('missing-id')->andThrow(new RuntimeException('Not found'));
+    $weebdex->shouldNotReceive('syncMangaToDatabase');
 
     actingAs($user)
-        ->get(route('manga.show', ['id' => 'missing-slug']))
+        ->get(route('manga.show', ['id' => 'missing-id']))
         ->assertNotFound();
 });
 
-it('does not return not found for upstream request errors', function () {
-    $user = User::factory()->create();
-
-    $comick = mock(ComickApiService::class);
-    $comick->shouldReceive('getMangaBySlug')->once()->with('93q1r')->andThrow(new RuntimeException('Comix API request failed: 500'));
-
-    actingAs($user)
-        ->get(route('manga.show', ['id' => '93q1r']))
-        ->assertServerError();
-});
-
-it('keeps manga detail page working when chapter sync fails', function () {
-    $user = User::factory()->create();
-
-    Manga::factory()->create([
-        'id' => '93q1r',
-        'slug' => 'the-summoner-apocalypse-rewinds',
-        'title' => 'The Summoner: Apocalypse Rewinds',
-        'genres' => ['Action'],
-        'themes' => [],
-    ]);
-
-    $comick = mock(ComickApiService::class);
-    $comick->shouldNotReceive('getMangaBySlug');
-    $comick->shouldNotReceive('syncMangaToDatabase');
-    $comick->shouldNotReceive('getMangaChaptersBySlug');
-    $comick->shouldNotReceive('syncChapters');
-
-    $response = actingAs($user)->get(route('manga.show', ['id' => '93q1r']));
-
-    $response
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('manga-detail')
-            ->where('manga.id', '93q1r')
-        );
-});
-
 it('renders manga reader for a valid chapter and tracks progress', function () {
-    $this->withoutVite();
-
     $user = User::factory()->create();
-    $manga = Manga::factory()->create(['id' => '793e', 'slug' => 'sample-manga']);
+    $manga = Manga::factory()->create(['id' => 'manga001']);
 
     $previousChapter = Chapter::factory()->create([
+        'id' => 'chap0001',
         'manga_id' => $manga->id,
-        'chapter_number' => 45,
-        'chapter_label' => '45',
-        'external_id' => '8159269',
+        'chapter_number' => '45',
     ]);
 
     $chapter = Chapter::factory()->create([
+        'id' => 'chap0002',
         'manga_id' => $manga->id,
-        'chapter_number' => 46,
-        'chapter_label' => '46',
-        'external_id' => '8159270',
+        'chapter_number' => '46',
         'title' => 'The Next Layer',
+        'node' => 'https://s13.weebdex.net',
+        'pages' => [
+            ['name' => '1-image.webp', 'dimensions' => [800, 1200]],
+            ['name' => '2-image.webp', 'dimensions' => [800, 1200]],
+        ],
+        'synced_at' => now(),
     ]);
 
     $nextChapter = Chapter::factory()->create([
+        'id' => 'chap0003',
         'manga_id' => $manga->id,
-        'chapter_number' => 47,
-        'chapter_label' => '47',
-        'external_id' => '8159271',
+        'chapter_number' => '47',
     ]);
 
-    $comick = mock(ComickApiService::class);
-    $comick->shouldNotReceive('getMangaBySlug');
-    $comick->shouldNotReceive('syncMangaToDatabase');
-    $comick->shouldNotReceive('getMangaChaptersBySlug');
-    $comick->shouldNotReceive('syncChapters');
-    $comick->shouldReceive('getChapterById')->once()->with('8159270')->andReturn([
-        'id' => '8159270',
-        'title' => 'The Next Layer',
-        'page_count' => 2,
-        'images' => [
-            ['url' => 'https://example.com/p1.webp', 'width' => 800, 'height' => 1200],
-            ['url' => 'https://example.com/p2.webp', 'width' => 800, 'height' => 1200],
-        ],
-    ]);
+    $weebdex = mock(WeebdexApiService::class);
+    $weebdex->shouldReceive('isStale')->andReturn(false);
+    $weebdex->shouldNotReceive('getChapterById');
+    $weebdex->shouldNotReceive('syncChapterPages');
+    $weebdex->shouldReceive('buildPageImageUrl')->twice()->andReturnUsing(
+        fn (string $chapterId, string $fileName, ?string $node): string => rtrim((string) $node, '/')."/data/{$chapterId}/{$fileName}"
+    );
 
-    $response = actingAs($user)->get(route('manga.read', ['id' => $manga->id, 'chapterId' => '8159270']));
-
-    $response
+    actingAs($user)
+        ->get(route('manga.read', ['id' => $manga->id, 'chapterId' => $chapter->id]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('manga-reader')
             ->where('manga.id', $manga->id)
-            ->where('chapter.id', '8159270')
-            ->where('source_url', "https://comix.to/title/{$manga->id}/8159270")
-            ->where('navigation.previous_chapter_id', $previousChapter->external_id)
-            ->where('navigation.next_chapter_id', $nextChapter->external_id)
+            ->where('chapter.id', 'chap0002')
+            ->where('source_url', 'https://weebdex.org/chapter/chap0002')
+            ->where('navigation.previous_chapter_id', $previousChapter->id)
+            ->where('navigation.next_chapter_id', $nextChapter->id)
             ->has('images', 2)
         );
 
@@ -175,17 +110,19 @@ it('renders manga reader for a valid chapter and tracks progress', function () {
 });
 
 it('moves bookmarked manga into reading when opening a chapter', function () {
-    $this->withoutVite();
-
     $user = User::factory()->create();
-    $manga = Manga::factory()->create(['id' => 'book1', 'slug' => 'bookmarked-title']);
+    $manga = Manga::factory()->create(['id' => 'book1']);
 
     $chapter = Chapter::factory()->create([
+        'id' => '910001',
         'manga_id' => $manga->id,
-        'chapter_number' => 1,
-        'chapter_label' => '1',
-        'external_id' => '910001',
+        'chapter_number' => '1',
         'title' => 'Start',
+        'node' => 'https://s13.weebdex.net',
+        'pages' => [
+            ['name' => '1-image.webp', 'dimensions' => [800, 1200]],
+        ],
+        'synced_at' => now(),
     ]);
 
     UserManga::query()->create([
@@ -197,22 +134,12 @@ it('moves bookmarked manga into reading when opening a chapter', function () {
         'notify_on_update' => true,
     ]);
 
-    $comick = mock(ComickApiService::class);
-    $comick->shouldNotReceive('getMangaBySlug');
-    $comick->shouldNotReceive('syncMangaToDatabase');
-    $comick->shouldNotReceive('getMangaChaptersBySlug');
-    $comick->shouldNotReceive('syncChapters');
-    $comick->shouldReceive('getChapterById')->once()->with('910001')->andReturn([
-        'id' => '910001',
-        'title' => 'Start',
-        'page_count' => 1,
-        'images' => [
-            ['url' => 'https://example.com/p1.webp', 'width' => 800, 'height' => 1200],
-        ],
-    ]);
+    $weebdex = mock(WeebdexApiService::class);
+    $weebdex->shouldReceive('isStale')->andReturn(false);
+    $weebdex->shouldReceive('buildPageImageUrl')->once()->andReturn('https://s13.weebdex.net/data/910001/1-image.webp');
 
     actingAs($user)
-        ->get(route('manga.read', ['id' => $manga->id, 'chapterId' => '910001']))
+        ->get(route('manga.read', ['id' => $manga->id, 'chapterId' => $chapter->id]))
         ->assertOk();
 
     $entry = UserManga::query()
@@ -228,39 +155,15 @@ it('moves bookmarked manga into reading when opening a chapter', function () {
         ->and($entry->last_read_at)->not->toBeNull();
 });
 
-it('redirects manga reader legacy slug URL to canonical hash id URL', function () {
-    $user = User::factory()->create();
-
-    $manga = Manga::factory()->create([
-        'id' => '93q1r',
-        'slug' => 'the-summoner-apocalypse-rewinds',
-    ]);
-
-    Chapter::factory()->create([
-        'manga_id' => $manga->id,
-        'external_id' => '8159270',
-    ]);
-
-    $comick = mock(ComickApiService::class);
-    $comick->shouldNotReceive('getMangaBySlug');
-    $comick->shouldNotReceive('syncMangaToDatabase');
-    $comick->shouldNotReceive('getChapterById');
-
-    actingAs($user)
-        ->get(route('manga.read', ['id' => $manga->slug, 'chapterId' => '8159270']))
-        ->assertRedirect(route('manga.read', ['id' => '93q1r', 'chapterId' => '8159270']));
-});
-
 it('returns not found when chapter does not exist for manga reader route', function () {
     $user = User::factory()->create();
-    $manga = Manga::factory()->create(['id' => '93q1r']);
+    $manga = Manga::factory()->create(['id' => 'manga404']);
 
-    $comick = mock(ComickApiService::class);
-    $comick->shouldNotReceive('getMangaBySlug');
-    $comick->shouldNotReceive('syncMangaToDatabase');
-    $comick->shouldReceive('getMangaChaptersBySlug')->once()->with($manga->id)->andReturn(collect());
-    $comick->shouldReceive('syncChapters')->once();
-    $comick->shouldNotReceive('getChapterById');
+    $weebdex = mock(WeebdexApiService::class);
+    $weebdex->shouldReceive('isStale')->andReturn(false);
+    $weebdex->shouldReceive('getMangaChaptersById')->once()->with('manga404')->andReturn(collect());
+    $weebdex->shouldReceive('syncChapters')->once();
+    $weebdex->shouldNotReceive('getChapterById');
 
     actingAs($user)
         ->get(route('manga.read', ['id' => $manga->id, 'chapterId' => 'missingchapter']))

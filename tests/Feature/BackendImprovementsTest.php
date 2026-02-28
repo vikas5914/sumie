@@ -3,7 +3,7 @@
 use App\Models\Manga;
 use App\Models\User;
 use App\Models\UserManga;
-use App\Services\ComickApiService;
+use App\Services\WeebdexApiService;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -12,48 +12,31 @@ use function Pest\Laravel\mock;
 
 it('caches trending manga data and serves from cache on subsequent requests', function () {
     Cache::flush();
-    \Illuminate\Support\Facades\Config::set('services.comix.base_url', 'https://comix-proxy.test');
 
-    \Illuminate\Support\Facades\Http::fake([
-        'https://comix-proxy.test/top*' => \Illuminate\Support\Facades\Http::response([
-            'status' => 200,
-            'result' => [
-                'items' => [[
-                    'hash_id' => 'trending1',
-                    'slug' => 'trending-manga',
-                    'title' => 'Trending Manga',
-                    'synopsis' => 'A trending manga',
-                    'poster' => ['large' => 'https://static.comix.to/trending.jpg'],
-                    'status' => 'releasing',
-                    'type' => 'manga',
-                    'is_nsfw' => false,
-                    'year' => 2024,
-                    'rated_avg' => 8.5,
-                    'rated_count' => 100,
-                    'follows_total' => 500,
-                    'latest_chapter' => 100,
-                    'term_ids' => [],
-                ]],
-            ],
-        ], 200),
-        'https://comix-proxy.test/terms*' => \Illuminate\Support\Facades\Http::response([
-            'status' => 200,
-            'result' => ['items' => []],
-        ], 200),
-    ]);
+    $weebdex = mock(WeebdexApiService::class);
+    $weebdex->shouldReceive('getTrendingManga')->once()->with(12)->andReturn(collect([
+        [
+            'id' => 'trend001',
+            'title' => 'Trending Manga',
+            'description' => 'A trending manga',
+            'cover_image_url' => 'https://srv.weebdex.net/covers/trend001/cover.jpg',
+            'status' => 'ongoing',
+            'genres' => ['Action'],
+            'rating_average' => 8.5,
+            'total_chapters' => 10,
+        ],
+    ]));
 
-    // Call the service directly to trigger caching via the controller's fetchTrendingManga
-    $controller = new \App\Http\Controllers\HomeController(app(\App\Services\ComickApiService::class));
+    $controller = new \App\Http\Controllers\HomeController(app(WeebdexApiService::class));
     $method = new ReflectionMethod($controller, 'fetchTrendingManga');
     $method->setAccessible(true);
 
-    $result1 = $method->invoke($controller);
-    expect($result1)->toHaveCount(1)
-        ->and(Cache::has('home:trending'))->toBeTrue();
+    $resultOne = $method->invoke($controller);
+    $resultTwo = $method->invoke($controller);
 
-    // Second call should serve from cache without hitting API again
-    $result2 = $method->invoke($controller);
-    expect($result2)->toBe($result1);
+    expect($resultOne)->toHaveCount(1)
+        ->and($resultTwo)->toBe($resultOne)
+        ->and(Cache::has('home:trending'))->toBeTrue();
 });
 
 it('toggles favorite and returns correct message after toggle', function () {
@@ -70,21 +53,17 @@ it('toggles favorite and returns correct message after toggle', function () {
         'last_read_at' => now(),
     ]);
 
-    // Toggle to favorite
-    $response = $this->actingAs($user)
-        ->patch(route('library.toggle-favorite', ['id' => $userManga->id]));
-
-    $response->assertRedirect()
+    $this->actingAs($user)
+        ->patch(route('library.toggle-favorite', ['id' => $userManga->id]))
+        ->assertRedirect()
         ->assertSessionHas('message', 'Added to favorites');
 
     $userManga->refresh();
     expect($userManga->is_favorite)->toBeTrue();
 
-    // Toggle back to not favorite
-    $response = $this->actingAs($user)
-        ->patch(route('library.toggle-favorite', ['id' => $userManga->id]));
-
-    $response->assertRedirect()
+    $this->actingAs($user)
+        ->patch(route('library.toggle-favorite', ['id' => $userManga->id]))
+        ->assertRedirect()
         ->assertSessionHas('message', 'Removed from favorites');
 
     $userManga->refresh();
@@ -156,12 +135,8 @@ it('only shares essential user fields via inertia', function () {
         'name' => 'TestUser',
     ]);
 
-    $comick = mock(ComickApiService::class);
-    $comick->shouldNotReceive('getTrendingManga');
-
-    $response = actingAs($user)->get(route('home'));
-
-    $response->assertOk()
+    actingAs($user)->get(route('home'))
+        ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user.id', $user->id)
             ->where('auth.user.name', 'TestUser')
@@ -169,101 +144,9 @@ it('only shares essential user fields via inertia', function () {
         );
 });
 
-it('syncs manga without schema column check', function () {
-    Cache::flush();
-    \Illuminate\Support\Facades\Config::set('services.comix.base_url', 'https://comix-proxy.test');
-
-    \Illuminate\Support\Facades\Http::fake(function (\Illuminate\Http\Client\Request $request) {
-        $url = $request->url();
-
-        if (str_contains($url, '/manga?')) {
-            return \Illuminate\Support\Facades\Http::response([
-                'status' => 200,
-                'result' => [
-                    'items' => [[
-                        'manga_id' => 99999,
-                        'hash_id' => 'synctest1',
-                        'slug' => 'sync-test-manga',
-                        'title' => 'Sync Test',
-                        'synopsis' => 'Testing sync',
-                        'poster' => ['large' => 'https://static.comix.to/sync.jpg'],
-                        'status' => 'releasing',
-                        'type' => 'manhwa',
-                        'is_nsfw' => false,
-                        'year' => 2024,
-                        'rated_avg' => 7.5,
-                        'rated_count' => 100,
-                        'follows_total' => 500,
-                        'latest_chapter' => 50,
-                        'term_ids' => [],
-                        'links' => [],
-                    ]],
-                    'pagination' => ['current_page' => 1, 'last_page' => 1],
-                ],
-            ], 200);
-        }
-
-        if (str_contains($url, '/manga/synctest1')) {
-            return \Illuminate\Support\Facades\Http::response([
-                'status' => 200,
-                'result' => [
-                    'manga_id' => 99999,
-                    'hash_id' => 'synctest1',
-                    'slug' => 'sync-test-manga',
-                    'title' => 'Sync Test',
-                    'synopsis' => 'Testing sync',
-                    'poster' => ['large' => 'https://static.comix.to/sync.jpg'],
-                    'status' => 'releasing',
-                    'type' => 'manhwa',
-                    'is_nsfw' => false,
-                    'year' => 2024,
-                    'rated_avg' => 7.5,
-                    'rated_count' => 100,
-                    'follows_total' => 500,
-                    'latest_chapter' => 50,
-                    'term_ids' => [],
-                    'links' => [],
-                ],
-            ], 200);
-        }
-
-        if (str_contains($url, '/terms')) {
-            return \Illuminate\Support\Facades\Http::response([
-                'status' => 200,
-                'result' => ['items' => []],
-            ], 200);
-        }
-
-        return \Illuminate\Support\Facades\Http::response([
-            'status' => 404,
-            'message' => 'Not found',
-            'result' => null,
-        ], 200);
-    });
-
-    $comick = app(ComickApiService::class);
-    $mangaData = $comick->getMangaBySlug('sync-test-manga');
-    $manga = $comick->syncMangaToDatabase($mangaData);
-
-    expect($manga->id)->toBe('synctest1')
-        ->and($manga->slug)->toBe('sync-test-manga')
-        ->and($manga->type)->toBe('manhwa')
-        ->and($manga->is_nsfw)->toBeFalse()
-        ->and($manga->demographics)->toBeArray()
-        ->and($manga->formats)->toBeArray()
-        ->and($manga->source_manga_id)->not->toBeNull();
-
-    $this->assertDatabaseHas('mangas', [
-        'id' => 'synctest1',
-        'slug' => 'sync-test-manga',
-        'type' => 'manhwa',
-    ]);
-});
-
 it('returns null user in inertia when not authenticated on onboarding', function () {
-    $response = $this->get(route('onboarding'));
-
-    $response->assertOk()
+    $this->get(route('onboarding'))
+        ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('auth.user', null)
         );

@@ -5,7 +5,7 @@ use App\Models\Manga;
 use App\Models\ReadingProgress;
 use App\Models\User;
 use App\Models\UserManga;
-use App\Services\ComickApiService;
+use App\Services\WeebdexApiService;
 
 use function Pest\Laravel\mock;
 
@@ -14,9 +14,9 @@ it('stores bookmarked manga as planned in library', function () {
     $manga = Manga::factory()->create();
 
     Chapter::factory()->create([
+        'id' => '10001',
         'manga_id' => $manga->id,
-        'chapter_number' => 1,
-        'external_id' => '10001',
+        'chapter_number' => '1',
     ]);
 
     $response = $this->actingAs($user)->post(route('library.store', ['mangaId' => $manga->id]), [
@@ -70,9 +70,9 @@ it('removing bookmark clears library entry and reading progress', function () {
     $user = User::factory()->create();
     $manga = Manga::factory()->create();
     $chapter = Chapter::factory()->create([
+        'id' => '20001',
         'manga_id' => $manga->id,
-        'external_id' => '20001',
-        'chapter_number' => 1,
+        'chapter_number' => '1',
     ]);
 
     UserManga::query()->create([
@@ -112,22 +112,22 @@ it('removing bookmark clears library entry and reading progress', function () {
 it('bookmarks unsynced manga ids by syncing before create', function () {
     $user = User::factory()->create();
 
-    $comick = mock(ComickApiService::class);
-    $comick->shouldReceive('getMangaBySlug')->once()->with('remote-slug')->andReturn([
+    $weebdex = mock(WeebdexApiService::class);
+    $weebdex->shouldReceive('getMangaById')->once()->with('remote-id')->andReturn([
         'id' => 'abc12',
-        'slug' => 'remote-slug',
         'title' => 'Remote Manga',
+        'status' => 'ongoing',
     ]);
-    $comick->shouldReceive('syncMangaToDatabase')->once()->andReturnUsing(function (array $mangaData) {
+    $weebdex->shouldReceive('syncMangaToDatabase')->once()->andReturnUsing(function (array $mangaData) {
         return Manga::factory()->create([
             'id' => (string) $mangaData['id'],
-            'slug' => (string) $mangaData['slug'],
             'title' => (string) $mangaData['title'],
+            'status' => (string) $mangaData['status'],
         ]);
     });
 
     $this->actingAs($user)
-        ->post(route('library.bookmark.toggle', ['mangaId' => 'remote-slug']))
+        ->post(route('library.bookmark.toggle', ['mangaId' => 'remote-id']))
         ->assertRedirect();
 
     $this->assertDatabaseHas('user_mangas', [

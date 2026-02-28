@@ -1,88 +1,29 @@
 <?php
 
+use App\Models\Chapter;
 use App\Models\Manga;
 use App\Models\User;
-use App\Services\ComickApiService;
 
-use function Pest\Laravel\mock;
-
-it('redirects guests to onboarding from home', function () {
-    $response = $this->get(route('home'));
-
-    $response->assertRedirect(route('onboarding'));
+it('redirects guests to onboarding from protected routes', function () {
+    $this->get(route('home'))->assertRedirect(route('onboarding'));
+    $this->get(route('library'))->assertRedirect(route('onboarding'));
+    $this->get(route('search'))->assertRedirect(route('onboarding'));
+    $this->get(route('me'))->assertRedirect(route('onboarding'));
+    $this->get(route('manga.show', ['id' => 'abc123']))->assertRedirect(route('onboarding'));
+    $this->get(route('manga.read', ['id' => 'abc123', 'chapterId' => 'chap001']))->assertRedirect(route('onboarding'));
 });
 
-it('redirects guests to onboarding from library', function () {
-    $response = $this->get(route('library'));
-
-    $response->assertRedirect(route('onboarding'));
-});
-
-it('redirects guests to onboarding from search', function () {
-    $response = $this->get(route('search'));
-
-    $response->assertRedirect(route('onboarding'));
-});
-
-it('redirects guests to onboarding from me', function () {
-    $response = $this->get(route('me'));
-
-    $response->assertRedirect(route('onboarding'));
-});
-
-it('redirects guests to onboarding from manga detail', function () {
-    $response = $this->get(route('manga.show', ['id' => 'naruto']));
-
-    $response->assertRedirect(route('onboarding'));
-});
-
-it('redirects guests to onboarding from manga reader', function () {
-    $response = $this->get(route('manga.read', ['id' => 'naruto', 'chapterId' => '1001']));
-
-    $response->assertRedirect(route('onboarding'));
-});
-
-it('allows authenticated users to access home', function () {
-    $user = User::factory()->create();
-
-    $comick = mock(ComickApiService::class);
-
-    $comick->shouldNotReceive('getTrendingManga');
-
-    $response = $this->actingAs($user)->get(route('home'));
-
-    $response->assertOk();
-});
-
-it('allows authenticated users to access library', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->get(route('library'));
-
-    $response->assertOk();
-});
-
-it('allows authenticated users to access search', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->get(route('search'));
-
-    $response->assertOk();
-});
-
-it('allows authenticated users to access me', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->get(route('me'));
-
-    $response->assertOk();
-});
-
-it('allows authenticated users to access manga detail', function () {
+it('allows authenticated users to access protected routes', function () {
     $user = User::factory()->create();
     $manga = Manga::factory()->create();
+    $chapter = Chapter::factory()->create([
+        'manga_id' => $manga->id,
+    ]);
 
-    $response = $this->actingAs($user)->get(route('manga.show', ['id' => $manga->id]));
-
-    $response->assertOk();
+    $this->actingAs($user)->get(route('home'))->assertOk();
+    $this->actingAs($user)->get(route('library'))->assertOk();
+    $this->actingAs($user)->get(route('search'))->assertOk();
+    $this->actingAs($user)->get(route('me'))->assertOk();
+    $this->actingAs($user)->get(route('manga.show', ['id' => $manga->id]))->assertOk();
+    $this->actingAs($user)->get(route('manga.read', ['id' => $manga->id, 'chapterId' => $chapter->id]))->assertOk();
 });

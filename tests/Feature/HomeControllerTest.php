@@ -5,18 +5,13 @@ use App\Models\Chapter;
 use App\Models\Manga;
 use App\Models\User;
 use App\Models\UserManga;
-use App\Services\ComickApiService;
+use App\Services\WeebdexApiService;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
-use function Pest\Laravel\mock;
 
 it('loads the home shell without resolving deferred feed data', function () {
     $user = User::factory()->create();
-
-    $comick = mock(ComickApiService::class);
-
-    $comick->shouldNotReceive('getTrendingManga');
 
     $response = actingAs($user)->get(route('home'));
 
@@ -30,13 +25,13 @@ it('loads the home shell without resolving deferred feed data', function () {
 it('returns continue reading timestamps as ISO-8601', function () {
     $user = User::factory()->create();
     $manga = Manga::factory()->create([
-        'id' => 'homex1',
+        'id' => 'homefeed01',
         'title' => 'Home Feed Test',
     ]);
     $chapter = Chapter::factory()->create([
+        'id' => 'homechap01',
         'manga_id' => $manga->id,
-        'external_id' => 'chapterx1',
-        'chapter_number' => 5,
+        'chapter_number' => '5',
     ]);
 
     UserManga::query()->create([
@@ -49,7 +44,7 @@ it('returns continue reading timestamps as ISO-8601', function () {
         'last_read_at' => now()->subHours(2),
     ]);
 
-    $controller = new HomeController(app(ComickApiService::class));
+    $controller = new HomeController(app(WeebdexApiService::class));
     $method = new ReflectionMethod($controller, 'getContinueReading');
     $method->setAccessible(true);
 
@@ -58,6 +53,7 @@ it('returns continue reading timestamps as ISO-8601', function () {
 
     expect($result)
         ->toHaveCount(1)
+        ->and($result[0]['current_chapter_id'])->toBe('homechap01')
         ->and($result[0]['last_read_at'])->toBeString()
         ->and(str_contains((string) $result[0]['last_read_at'], 'T'))->toBeTrue();
 });

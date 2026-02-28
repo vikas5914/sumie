@@ -18,13 +18,13 @@ it('renders profile with persisted user stats', function () {
     $secondManga = Manga::factory()->create();
 
     $firstChapter = Chapter::factory()->create([
+        'id' => 'profile-ch-1',
         'manga_id' => $firstManga->id,
-        'external_id' => 'profile-chapter-1',
     ]);
 
     $secondChapter = Chapter::factory()->create([
+        'id' => 'profile-ch-2',
         'manga_id' => $secondManga->id,
-        'external_id' => 'profile-chapter-2',
     ]);
 
     UserManga::query()->create([
@@ -78,8 +78,8 @@ it('falls back to estimated hours when no tracked duration is present', function
     $user = User::factory()->create();
     $manga = Manga::factory()->create();
     $chapter = Chapter::factory()->create([
+        'id' => 'profile-fallback-1',
         'manga_id' => $manga->id,
-        'external_id' => 'profile-fallback-1',
     ]);
 
     ReadingProgress::query()->create([

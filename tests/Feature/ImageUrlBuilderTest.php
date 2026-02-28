@@ -8,13 +8,13 @@ it('returns null for null image url', function () {
 });
 
 it('returns direct url when proxy is disabled', function () {
-    $url = 'https://static.comix.to/covers/test.jpg';
+    $url = 'https://srv.weebdex.net/covers/test.jpg';
 
     expect(ImageUrlBuilder::build($url, false))->toBe($url);
 });
 
 it('returns proxied url when proxy is enabled', function () {
-    $url = 'https://static.comix.to/covers/test.jpg';
+    $url = 'https://srv.weebdex.net/covers/test.jpg';
     $result = ImageUrlBuilder::build($url, true);
 
     expect($result)->toContain('/images/proxy/')

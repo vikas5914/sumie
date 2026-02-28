@@ -3,16 +3,16 @@
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
-it('proxies and caches an allowed legacy comick image url', function () {
+it('proxies and caches a weebdex image url', function () {
     Storage::fake('public');
 
     Http::fake([
-        'https://meo.comick.pictures/*' => Http::response('fake-image-binary', 200, [
+        'https://srv.weebdex.net/*' => Http::response('fake-image-binary', 200, [
             'Content-Type' => 'image/jpeg',
         ]),
     ]);
 
-    $encoded = base64_encode('https://meo.comick.pictures/test.jpg');
+    $encoded = base64_encode('https://srv.weebdex.net/covers/test.jpg');
 
     $first = $this->get(route('image.proxy', ['encodedUrl' => $encoded]));
 
@@ -29,16 +29,16 @@ it('proxies and caches an allowed legacy comick image url', function () {
     expect(Storage::disk('public')->allFiles('covers'))->not->toBeEmpty();
 });
 
-it('proxies and caches an allowed comix image url', function () {
+it('proxies and caches chapter node image url', function () {
     Storage::fake('public');
 
     Http::fake([
-        'https://static.comix.to/*' => Http::response('fake-image-binary', 200, [
+        'https://s13.weebdex.net/*' => Http::response('fake-image-binary', 200, [
             'Content-Type' => 'image/jpeg',
         ]),
     ]);
 
-    $encoded = base64_encode('https://static.comix.to/a/b/c.jpg');
+    $encoded = base64_encode('https://s13.weebdex.net/data/chapter-id/page-1.jpg');
 
     $response = $this->get(route('image.proxy', ['encodedUrl' => $encoded]));
 
