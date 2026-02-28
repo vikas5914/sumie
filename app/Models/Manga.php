@@ -18,56 +18,50 @@ class Manga extends Model
 
     protected $fillable = [
         'id',
-        'slug',
-        'source_manga_id',
         'title',
         'description',
-        'cover_image_url',
-        'banner_image_url',
-        'author',
-        'artist',
-        'type',
         'status',
+        'demographic',
         'content_rating',
-        'is_nsfw',
+        'year',
+        'language',
+        'cover_id',
+        'cover_ext',
+        'cover_image_url',
         'genres',
         'themes',
-        'demographics',
-        'formats',
-        'total_chapters',
-        'release_year',
-        'country_of_origin',
-        'rating_average',
-        'rating_count',
-        'view_count',
-        'source_name',
-        'source_url',
+        'authors',
+        'artists',
+        'available_languages',
         'links',
-        'last_fetched_at',
-        'created_at_api',
-        'updated_at_api',
+        'chapters_count',
+        'follows_count',
+        'views_count',
+        'source_payload',
+        'synced_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'source_manga_id' => 'integer',
-            'is_nsfw' => 'boolean',
             'genres' => 'array',
             'themes' => 'array',
-            'demographics' => 'array',
-            'formats' => 'array',
+            'authors' => 'array',
+            'artists' => 'array',
+            'available_languages' => 'array',
             'links' => 'array',
-            'rating_average' => 'decimal:2',
-            'last_fetched_at' => 'datetime',
-            'created_at_api' => 'datetime',
-            'updated_at_api' => 'datetime',
+            'source_payload' => 'array',
+            'synced_at' => 'datetime',
+            'year' => 'integer',
+            'chapters_count' => 'integer',
+            'follows_count' => 'integer',
+            'views_count' => 'integer',
         ];
     }
 
     public function chapters(): HasMany
     {
-        return $this->hasMany(Chapter::class)->orderBy('chapter_number');
+        return $this->hasMany(Chapter::class);
     }
 
     public function userMangas(): HasMany
@@ -80,42 +74,13 @@ class Manga extends Model
         return $this->hasMany(ReadingProgress::class);
     }
 
-    public function scopeOngoing($query)
-    {
-        return $query->where('status', 'ongoing');
-    }
-
-    public function scopeCompleted($query)
-    {
-        return $query->where('status', 'completed');
-    }
-
-    public function scopeByGenre($query, string $genre)
-    {
-        return $query->whereJsonContains('genres', $genre);
-    }
-
     public function getCoverImageUrl(bool $useProxy = false): ?string
     {
         return ImageUrlBuilder::build($this->cover_image_url, $useProxy);
     }
 
-    public function getBannerImageUrl(bool $useProxy = false): ?string
+    public function getWeebdexUrl(): string
     {
-        return ImageUrlBuilder::build($this->banner_image_url, $useProxy);
-    }
-
-    public function getComixUrl(): ?string
-    {
-        if (! $this->slug) {
-            return null;
-        }
-
-        return "https://comix.to/comic/{$this->slug}";
-    }
-
-    public function getComickUrl(): ?string
-    {
-        return $this->getComixUrl();
+        return "https://weebdex.org/title/{$this->id}";
     }
 }

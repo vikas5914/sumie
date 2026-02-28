@@ -12,26 +12,35 @@ class Chapter extends Model
     /** @use HasFactory<\Database\Factories\ChapterFactory> */
     use HasFactory;
 
+    protected $keyType = 'string';
+
+    public $incrementing = false;
+
     protected $fillable = [
+        'id',
         'manga_id',
         'chapter_number',
-        'chapter_label',
-        'volume_number',
+        'volume',
         'title',
-        'page_count',
-        'release_date',
-        'is_published',
         'language',
-        'source_url',
-        'external_id',
+        'published_at',
+        'node',
+        'pages',
+        'page_count',
+        'is_unavailable',
+        'source_payload',
+        'synced_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'chapter_number' => 'decimal:2',
-            'release_date' => 'datetime',
-            'is_published' => 'boolean',
+            'published_at' => 'datetime',
+            'pages' => 'array',
+            'source_payload' => 'array',
+            'is_unavailable' => 'boolean',
+            'page_count' => 'integer',
+            'synced_at' => 'datetime',
         ];
     }
 

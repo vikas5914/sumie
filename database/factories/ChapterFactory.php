@@ -17,18 +17,31 @@ class ChapterFactory extends Factory
      */
     public function definition(): array
     {
+        $chapterId = fake()->unique()->regexify('[a-z0-9]{10}');
+        $chapterNumber = (string) fake()->randomFloat(1, 1, 300);
+
         return [
+            'id' => $chapterId,
             'manga_id' => Manga::factory(),
-            'chapter_number' => fake()->randomFloat(2, 1, 300),
-            'chapter_label' => (string) fake()->randomFloat(1, 1, 300),
-            'volume_number' => (string) fake()->numberBetween(1, 40),
+            'chapter_number' => $chapterNumber,
+            'volume' => (string) fake()->numberBetween(1, 40),
             'title' => fake()->sentence(4),
-            'page_count' => fake()->numberBetween(10, 45),
-            'release_date' => fake()->dateTimeBetween('-1 year', 'now'),
-            'is_published' => true,
+            'published_at' => fake()->dateTimeBetween('-1 year', 'now'),
             'language' => 'en',
-            'source_url' => 'https://comix.to/chapter/'.fake()->numberBetween(1000, 9999999),
-            'external_id' => (string) fake()->numberBetween(1000, 9999999),
+            'node' => 'https://s13.weebdex.net',
+            'pages' => [
+                [
+                    'name' => '1-sample.jpg',
+                    'dimensions' => [800, 1200],
+                ],
+            ],
+            'page_count' => fake()->numberBetween(10, 45),
+            'is_unavailable' => false,
+            'source_payload' => [
+                'id' => $chapterId,
+                'chapter' => $chapterNumber,
+            ],
+            'synced_at' => now(),
         ];
     }
 }

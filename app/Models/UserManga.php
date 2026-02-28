@@ -47,7 +47,7 @@ class UserManga extends Model
 
     public function currentChapter(): BelongsTo
     {
-        return $this->belongsTo(Chapter::class, 'current_chapter_id');
+        return $this->belongsTo(Chapter::class, 'current_chapter_id', 'id');
     }
 
     public function scopeReading($query)

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('reading_progress', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('chapter_id')->constrained('chapters')->onDelete('cascade');
-            $table->string('manga_id', 191);
+            $table->string('chapter_id', 64);
+            $table->string('manga_id', 64);
             $table->integer('page_number')->default(1);
             $table->boolean('is_finished')->default(false);
             $table->decimal('read_percentage', 5, 2)->default(0.00);
@@ -24,6 +24,7 @@ return new class extends Migration
             $table->timestamp('finished_at')->nullable();
             $table->timestamps();
 
+            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
             $table->foreign('manga_id')->references('id')->on('mangas')->onDelete('cascade');
             $table->unique(['user_id', 'chapter_id']);
             $table->index(['user_id', 'manga_id']);
