@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
@@ -35,10 +35,6 @@ export default function Me() {
     const userName = auth.user?.name ?? 'Operator';
     const [readingMode, setReadingMode] = useState<ReadingMode>('vertical_scroll');
     const [isSaved, setIsSaved] = useState(false);
-
-    const handleLogout = () => {
-        router.post('/logout');
-    };
 
     useEffect(() => {
         if (typeof window === 'undefined') {
@@ -157,16 +153,6 @@ export default function Me() {
                 </section>
 
                 <section className="mb-6">
-                    <button
-                        onClick={handleLogout}
-                        className="group relative flex w-full items-center justify-center gap-3 overflow-hidden border border-red-900/50 bg-transparent p-4 transition-all hover:border-red-500 hover:bg-red-900/10"
-                    >
-                        <AppIcon name="power_settings_new" className="text-red-700 transition-colors group-hover:text-red-500" />
-                        <span className="text-sm font-bold tracking-widest text-red-700 uppercase transition-colors group-hover:text-red-500">
-                            TERMINATE_SESSION
-                        </span>
-                        <div className="absolute top-0 left-0 h-full w-1 bg-red-500 opacity-0 transition-opacity group-hover:opacity-100"></div>
-                    </button>
                     <div className="mt-4 text-center">
                         <p className="text-[10px] font-bold text-zinc-700 uppercase">
                             ENV: {profile.environment} // MEMBER_SINCE: {profile.joined_at ?? 'UNKNOWN'}
