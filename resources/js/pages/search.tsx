@@ -161,7 +161,7 @@ export default function Search() {
                 {!shouldShowCardSkeleton && results.length > 0 ? (
                     <section className="grid grid-cols-2 gap-4 p-4">
                         {results.map((manga) => (
-                            <Link key={manga.id} href={`/manga/${manga.id}`} prefetch className="group flex cursor-pointer flex-col gap-2">
+                            <Link key={manga.id} href={`/manga/${manga.id}`} className="group flex cursor-pointer flex-col gap-2">
                                 <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-surface-dark">
                                     <div
                                         className="absolute inset-0 bg-cover bg-center grayscale transition-all duration-300 group-hover:grayscale-0"

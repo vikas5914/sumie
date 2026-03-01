@@ -78,6 +78,10 @@ export default function SearchInput({
     }, [filter]);
 
     useEffect(() => {
+        if (inputRef.current && document.activeElement === inputRef.current) {
+            return;
+        }
+
         setValue(defaultValue);
         lastSentRequestRef.current = buildRequestSignature(defaultValue, filter);
         skipNextAutoSubmitRef.current = true;
@@ -195,6 +199,9 @@ export default function SearchInput({
                 type="search"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
+                onFocus={() => {
+                    skipNextAutoSubmitRef.current = false;
+                }}
             />
 
             <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2">

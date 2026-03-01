@@ -290,10 +290,6 @@ export default function Home() {
                                                         backgroundImage: buildBackgroundImage(manga.cover_image_url),
                                                     }}
                                                 ></div>
-                                                <div className="absolute top-2 right-2 flex items-center gap-1 border border-border-dark bg-background-dark/80 px-2 py-0.5 text-[10px] font-bold text-text-light">
-                                                    <AppIcon name="star" className="text-[12px] text-primary" />{' '}
-                                                    {(manga.rating_average ?? 0).toFixed(1)}
-                                                </div>
                                                 {manga.status === 'ongoing' && (
                                                     <div className="absolute top-2 left-2 border border-primary bg-primary/90 px-2 py-0.5 text-[10px] font-bold text-background-dark uppercase">
                                                         NEW
