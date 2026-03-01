@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Deferred, Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
@@ -24,7 +24,7 @@ interface MangaReaderProps {
         title: string;
         page_count: number;
     };
-    images: Array<{
+    images?: Array<{
         id: number;
         url: string;
         width: number | null;
@@ -38,8 +38,23 @@ interface MangaReaderProps {
     [key: string]: unknown;
 }
 
+function ReaderPagesSkeleton({ isPageByPageMode }: { isPageByPageMode: boolean }) {
+    return (
+        <>
+            {Array.from({ length: isPageByPageMode ? 1 : 4 }).map((_, index) => (
+                <div
+                    key={index}
+                    className={`w-full animate-pulse border border-border-dark bg-surface-dark ${
+                        isPageByPageMode ? 'h-[calc(100vh-14rem)] snap-start' : 'aspect-[2/3]'
+                    }`}
+                />
+            ))}
+        </>
+    );
+}
+
 export default function MangaReader() {
-    const { manga, chapter, images, navigation, source_url } = usePage<MangaReaderProps>().props;
+    const { manga, chapter, images = [], navigation, source_url } = usePage<MangaReaderProps>().props;
 
     const chapterLabel = chapter.label ?? chapter.number.toString();
     const [readingMode, setReadingMode] = useState<ReadingMode>('vertical_scroll');
@@ -97,34 +112,36 @@ export default function MangaReader() {
                         isPageByPageMode ? 'h-[calc(100vh-11rem)] snap-y snap-mandatory overflow-y-auto pb-8' : ''
                     }`}
                 >
-                    {images.length > 0 ? (
-                        images.map((image) => (
-                            <img
-                                key={image.id}
-                                src={resolveImageUrl(image.url) ?? image.url}
-                                alt={`${manga.title} Chapter ${chapterLabel} Page ${image.id}`}
-                                width={image.width ?? undefined}
-                                height={image.height ?? undefined}
-                                loading="lazy"
-                                decoding="async"
-                                className={`w-full border border-border-dark bg-surface-dark ${isPageByPageMode ? 'snap-start' : ''}`}
-                            />
-                        ))
-                    ) : (
-                        <div className="flex flex-col items-center gap-3 border border-border-dark bg-surface-dark px-4 py-10 text-center">
-                            <p className="text-sm text-zinc-400">No page images are available for this chapter yet.</p>
-                            {source_url && (
-                                <a
-                                    href={source_url}
-                                    target="_blank"
-                                    rel="noreferrer noopener"
-                                    className="border border-primary bg-primary px-3 py-2 text-xs font-bold text-background-dark uppercase transition-colors hover:bg-white"
-                                >
-                                    Open Source Chapter
-                                </a>
-                            )}
-                        </div>
-                    )}
+                    <Deferred data="images" fallback={<ReaderPagesSkeleton isPageByPageMode={isPageByPageMode} />}>
+                        {images.length > 0 ? (
+                            images.map((image) => (
+                                <img
+                                    key={image.id}
+                                    src={resolveImageUrl(image.url) ?? image.url}
+                                    alt={`${manga.title} Chapter ${chapterLabel} Page ${image.id}`}
+                                    width={image.width ?? undefined}
+                                    height={image.height ?? undefined}
+                                    loading="lazy"
+                                    decoding="async"
+                                    className={`w-full border border-border-dark bg-surface-dark ${isPageByPageMode ? 'snap-start' : ''}`}
+                                />
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center gap-3 border border-border-dark bg-surface-dark px-4 py-10 text-center">
+                                <p className="text-sm text-zinc-400">No page images are available for this chapter yet.</p>
+                                {source_url && (
+                                    <a
+                                        href={source_url}
+                                        target="_blank"
+                                        rel="noreferrer noopener"
+                                        className="border border-primary bg-primary px-3 py-2 text-xs font-bold text-background-dark uppercase transition-colors hover:bg-white"
+                                    >
+                                        Open Source Chapter
+                                    </a>
+                                )}
+                            </div>
+                        )}
+                    </Deferred>
                 </main>
 
                 <footer className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md border-t border-border-dark bg-background-dark/95 backdrop-blur-sm">

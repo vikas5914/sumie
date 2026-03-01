@@ -142,6 +142,14 @@ class WeebdexApiService
     }
 
     /**
+     * @return array{chapters?: int, follows?: int, views?: int}
+     */
+    public function getMangaStatistics(string $id): array
+    {
+        return $this->getMangaStats($id);
+    }
+
+    /**
      * @return Collection<int, array<string, mixed>>
      */
     public function getMangaChaptersById(string $id): Collection

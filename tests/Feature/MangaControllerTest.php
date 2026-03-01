@@ -17,6 +17,8 @@ it('fetches missing manga from api and renders detail page', function () {
         'id' => '93q1r00001',
         'title' => 'The Summoner',
         'synced_at' => now(),
+        'views_count' => 0,
+        'follows_count' => 0,
     ]);
 
     $weebdex = mock(WeebdexApiService::class);
@@ -27,8 +29,9 @@ it('fetches missing manga from api and renders detail page', function () {
         'status' => 'ongoing',
     ]);
     $weebdex->shouldReceive('syncMangaToDatabase')->once()->andReturn($manga);
-    $weebdex->shouldReceive('getMangaChaptersById')->once()->with('93q1r00001')->andReturn(collect());
-    $weebdex->shouldReceive('syncChapters')->once()->with($manga, \Mockery::type(\Illuminate\Support\Collection::class));
+    $weebdex->shouldNotReceive('getMangaStatistics');
+    $weebdex->shouldNotReceive('getMangaChaptersById');
+    $weebdex->shouldNotReceive('syncChapters');
 
     actingAs($user)
         ->get(route('manga.show', ['id' => '93q1r00001']))
@@ -82,12 +85,10 @@ it('renders manga reader for a valid chapter and tracks progress', function () {
     ]);
 
     $weebdex = mock(WeebdexApiService::class);
-    $weebdex->shouldReceive('isStale')->andReturn(false);
+    $weebdex->shouldNotReceive('isStale');
     $weebdex->shouldNotReceive('getChapterById');
     $weebdex->shouldNotReceive('syncChapterPages');
-    $weebdex->shouldReceive('buildPageImageUrl')->twice()->andReturnUsing(
-        fn (string $chapterId, string $fileName, ?string $node): string => rtrim((string) $node, '/')."/data/{$chapterId}/{$fileName}"
-    );
+    $weebdex->shouldNotReceive('buildPageImageUrl');
 
     actingAs($user)
         ->get(route('manga.read', ['id' => $manga->id, 'chapterId' => $chapter->id]))
@@ -99,7 +100,6 @@ it('renders manga reader for a valid chapter and tracks progress', function () {
             ->where('source_url', 'https://weebdex.org/chapter/chap0002')
             ->where('navigation.previous_chapter_id', $previousChapter->id)
             ->where('navigation.next_chapter_id', $nextChapter->id)
-            ->has('images', 2)
         );
 
     $this->assertDatabaseHas('reading_progress', [
@@ -135,8 +135,8 @@ it('moves bookmarked manga into reading when opening a chapter', function () {
     ]);
 
     $weebdex = mock(WeebdexApiService::class);
-    $weebdex->shouldReceive('isStale')->andReturn(false);
-    $weebdex->shouldReceive('buildPageImageUrl')->once()->andReturn('https://s13.weebdex.net/data/910001/1-image.webp');
+    $weebdex->shouldNotReceive('isStale');
+    $weebdex->shouldNotReceive('buildPageImageUrl');
 
     actingAs($user)
         ->get(route('manga.read', ['id' => $manga->id, 'chapterId' => $chapter->id]))
@@ -160,7 +160,7 @@ it('returns not found when chapter does not exist for manga reader route', funct
     $manga = Manga::factory()->create(['id' => 'manga404']);
 
     $weebdex = mock(WeebdexApiService::class);
-    $weebdex->shouldReceive('isStale')->andReturn(false);
+    $weebdex->shouldNotReceive('isStale');
     $weebdex->shouldReceive('getMangaChaptersById')->once()->with('manga404')->andReturn(collect());
     $weebdex->shouldReceive('syncChapters')->once();
     $weebdex->shouldNotReceive('getChapterById');

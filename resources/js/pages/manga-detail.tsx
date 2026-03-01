@@ -55,6 +55,11 @@ interface MangaDetailProps {
         } | null;
     };
     manga: Manga;
+    statistics?: {
+        total_views: number;
+        follows_count: number;
+        total_chapters: number;
+    };
     chapters: Chapter[];
     libraryStatus: LibraryStatus | null;
     [key: string]: unknown;
@@ -201,7 +206,7 @@ function ChapterListSkeleton() {
 }
 
 export default function MangaDetail() {
-    const { auth, manga, libraryStatus } = usePage<MangaDetailProps>().props;
+    const { auth, manga, statistics, libraryStatus } = usePage<MangaDetailProps>().props;
     const userName = auth.user?.name ?? 'Operator';
     const buildBackgroundImage = (imageUrl: string | null | undefined): string => {
         const resolvedImageUrl = resolveImageUrl(imageUrl);
@@ -290,19 +295,35 @@ export default function MangaDetail() {
 
                         <div className="mb-6 grid grid-cols-3 gap-px border border-border-dark bg-border-dark">
                             <div className="flex flex-col gap-1 bg-background-dark p-3 text-center transition-colors hover:bg-surface-dark">
-                                <span className="text-[10px] tracking-widest text-zinc-500 uppercase">Rating</span>
-                                <div className="flex items-center justify-center gap-1 font-bold text-primary">
-                                    <AppIcon name="star" className="text-sm" />
-                                    <span>{(manga.rating_average ?? 0).toFixed(1)}</span>
-                                </div>
+                                <span className="text-[10px] tracking-widest text-zinc-500 uppercase">Views</span>
+                                <Deferred
+                                    data="statistics"
+                                    fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}
+                                >
+                                    <span className="font-bold text-text-light">
+                                        {(((statistics?.total_views ?? manga.total_views) ?? 0) / 1000).toFixed(1)}K
+                                    </span>
+                                </Deferred>
                             </div>
                             <div className="flex flex-col gap-1 bg-background-dark p-3 text-center transition-colors hover:bg-surface-dark">
                                 <span className="text-[10px] tracking-widest text-zinc-500 uppercase">Chapters</span>
-                                <span className="font-bold text-text-light">{manga.total_chapters}</span>
+                                <Deferred
+                                    data="statistics"
+                                    fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}
+                                >
+                                    <span className="font-bold text-text-light">{statistics?.total_chapters ?? manga.total_chapters}</span>
+                                </Deferred>
                             </div>
                             <div className="flex flex-col gap-1 bg-background-dark p-3 text-center transition-colors hover:bg-surface-dark">
                                 <span className="text-[10px] tracking-widest text-zinc-500 uppercase">Follows</span>
-                                <span className="font-bold text-text-light">{((manga.total_views ?? 0) / 1000).toFixed(1)}K</span>
+                                <Deferred
+                                    data="statistics"
+                                    fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}
+                                >
+                                    <span className="font-bold text-text-light">
+                                        {(((statistics?.follows_count ?? manga.rating_count) ?? 0) / 1000).toFixed(1)}K
+                                    </span>
+                                </Deferred>
                             </div>
                         </div>
 
