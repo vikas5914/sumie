@@ -12,6 +12,7 @@ import {
     ChevronDown,
     ChevronLeft,
     ChevronRight,
+    ChevronUp,
     CircleHelp,
     EllipsisVertical,
     ExternalLink,
@@ -38,6 +39,7 @@ import { cn } from '@/lib/utils';
 const iconMap: Record<string, LucideIcon> = {
     arrow_back: ArrowLeft,
     arrow_drop_down: ChevronDown,
+    arrow_drop_up: ChevronUp,
     arrow_forward: ArrowRight,
     bookmark: Bookmark,
     bookmark_add: BookmarkPlus,

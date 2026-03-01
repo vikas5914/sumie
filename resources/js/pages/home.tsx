@@ -1,5 +1,7 @@
 import { Deferred, Head, Link, router, usePage, usePoll } from '@inertiajs/react';
 import { useState } from 'react';
+import { library as libraryRoute, search as searchRoute } from '@/routes';
+import { read as readManga, show as showManga } from '@/routes/manga';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import SearchInput from '../components/SearchInput';
@@ -186,7 +188,7 @@ export default function Home() {
                         {/* Hero Section */}
                         {featuredManga && (
                             <section className="px-4">
-                                <Link href={`/manga/${featuredManga.id}`}>
+                                <Link href={showManga.url(featuredManga.id)}>
                                     <div className="group relative aspect-[4/3] w-full cursor-pointer overflow-hidden border border-border-dark shadow-lg">
                                         <div
                                             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
@@ -219,7 +221,7 @@ export default function Home() {
                         <section className="flex flex-col gap-3">
                             <div className="flex items-center justify-between px-4">
                                 <h3 className="text-lg font-bold text-text-light uppercase">CONTINUE READING</h3>
-                                <Link className="text-sm font-bold text-primary uppercase hover:text-primary/80" href="/library">
+                                <Link className="text-sm font-bold text-primary uppercase hover:text-primary/80" href={libraryRoute.url()}>
                                     SEE ALL
                                 </Link>
                             </div>
@@ -227,8 +229,8 @@ export default function Home() {
                                 <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2">
                                     {continueReading.map((item) => {
                                         const continueHref = item.current_chapter_id
-                                            ? `/manga/${item.id}/read/${item.current_chapter_id}`
-                                            : `/manga/${item.id}`;
+                                            ? readManga.url({ id: item.id, chapterId: item.current_chapter_id })
+                                            : showManga.url(item.id);
 
                                         return (
                                             <Link key={item.id} href={continueHref} className="flex w-[280px] flex-none snap-center">
@@ -264,7 +266,7 @@ export default function Home() {
                                     <div className="border border-border-dark bg-surface-dark p-6 text-center">
                                         <p className="text-sm text-zinc-500">No reading history found.</p>
                                         <Link
-                                            href="/search"
+                                            href={searchRoute.url()}
                                             className="mt-2 inline-block text-sm font-bold text-primary uppercase hover:text-primary/80"
                                         >
                                             Start Reading
@@ -282,7 +284,7 @@ export default function Home() {
                             {trendingManga.length > 0 ? (
                                 <div className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3">
                                     {trendingManga.map((manga) => (
-                                        <Link key={manga.id} href={`/manga/${manga.id}`} className="group flex cursor-pointer flex-col gap-2">
+                                        <Link key={manga.id} href={showManga.url(manga.id)} className="group flex cursor-pointer flex-col gap-2">
                                             <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">
                                                 <div
                                                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
@@ -322,7 +324,7 @@ export default function Home() {
                                     {recommendations.map((manga) => (
                                         <Link
                                             key={manga.id}
-                                            href={`/manga/${manga.id}`}
+                                            href={showManga.url(manga.id)}
                                             className="group flex w-[140px] flex-none cursor-pointer snap-center flex-col gap-2"
                                         >
                                             <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-zinc-800">

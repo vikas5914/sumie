@@ -1,5 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
+import { library as libraryRoute, search as searchRoute } from '@/routes';
+import { show as showManga } from '@/routes/manga';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import AppLayout from '../layouts/AppLayout';
@@ -120,7 +122,7 @@ export default function Library() {
                     </h1>
                     <div className="flex gap-2">
                         <Link
-                            href="/search"
+                            href={searchRoute.url()}
                             className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-all hover:bg-primary hover:text-black"
                         >
                             <AppIcon name="search" className="text-[20px]" />
@@ -138,7 +140,12 @@ export default function Library() {
                         return (
                             <Link
                                 key={status}
-                                href={`/library?status=${status}&sort=${currentSort}`}
+                                href={libraryRoute.url({
+                                    query: {
+                                        status,
+                                        sort: currentSort,
+                                    },
+                                })}
                                 only={['libraryItems', 'currentStatus', 'currentSort', 'counts']}
                                 preserveScroll
                                 preserveState
@@ -171,7 +178,12 @@ export default function Library() {
                                     {Object.entries(sortLabels).map(([sortKey, label]) => (
                                         <Link
                                             key={sortKey}
-                                            href={`/library?status=${currentStatus}&sort=${sortKey}`}
+                                            href={libraryRoute.url({
+                                                query: {
+                                                    status: currentStatus,
+                                                    sort: sortKey,
+                                                },
+                                            })}
                                             only={['libraryItems', 'currentStatus', 'currentSort', 'counts']}
                                             preserveScroll
                                             preserveState
@@ -197,7 +209,7 @@ export default function Library() {
                         {visibleItems.map((item) => (
                             <Link
                                 key={item.id}
-                                href={`/manga/${item.manga.id}`}
+                                href={showManga.url(item.manga.id)}
                                 className="group relative flex gap-4 border-b border-border-dark p-4 transition-colors hover:bg-surface-dark"
                             >
                                 <div className="relative aspect-[2/3] w-20 shrink-0 border border-border-dark bg-surface-dark">
@@ -258,7 +270,7 @@ export default function Library() {
                             </p>
                             <p className="mb-4 text-xs text-zinc-500">Start adding manga to your library</p>
                             <Link
-                                href="/search"
+                                href={searchRoute.url()}
                                 className="inline-flex items-center gap-2 border border-primary bg-primary px-4 py-2 text-xs font-bold text-black uppercase transition-all hover:bg-white"
                             >
                                 <AppIcon name="search" className="text-sm" />

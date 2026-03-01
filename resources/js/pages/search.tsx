@@ -1,5 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { search as searchRoute } from '@/routes';
+import { show as showManga } from '@/routes/manga';
 import AppIcon from '../components/AppIcon';
 import FilterTabs from '../components/FilterTabs';
 import Header from '../components/Header';
@@ -50,20 +52,17 @@ function readRecentSearches(key = 'sumie:recent-searches'): string[] {
 }
 
 function buildSearchHref(query: string, filter: string): string {
-    const params = new URLSearchParams();
     const normalizedQuery = query.trim();
     const normalizedFilter = filter.toLowerCase();
+    const searchQuery = normalizedQuery === '' ? null : normalizedQuery;
+    const searchFilter = normalizedFilter === '' || normalizedFilter === 'all' ? null : normalizedFilter;
 
-    if (normalizedQuery !== '') {
-        params.set('q', normalizedQuery);
-    }
-
-    if (normalizedFilter !== '' && normalizedFilter !== 'all') {
-        params.set('filter', normalizedFilter);
-    }
-
-    const qs = params.toString();
-    return qs ? `/search?${qs}` : '/search';
+    return searchRoute.url({
+        query: {
+            q: searchQuery,
+            filter: searchFilter,
+        },
+    });
 }
 
 export default function Search() {
@@ -161,7 +160,7 @@ export default function Search() {
                 {!shouldShowCardSkeleton && results.length > 0 ? (
                     <section className="grid grid-cols-2 gap-4 p-4">
                         {results.map((manga) => (
-                            <Link key={manga.id} href={`/manga/${manga.id}`} className="group flex cursor-pointer flex-col gap-2">
+                            <Link key={manga.id} href={showManga.url(manga.id)} className="group flex cursor-pointer flex-col gap-2">
                                 <div className="relative aspect-[2/3] w-full overflow-hidden border border-border-dark bg-surface-dark">
                                     <div
                                         className="absolute inset-0 bg-cover bg-center grayscale transition-all duration-300 group-hover:grayscale-0"
@@ -204,7 +203,7 @@ export default function Search() {
                                                         type="button"
                                                         onClick={() =>
                                                             router.get(
-                                                                '/search',
+                                                                searchRoute.url(),
                                                                 { q },
                                                                 {
                                                                     async: true,

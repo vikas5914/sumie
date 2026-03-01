@@ -35,6 +35,11 @@ This project has domain-specific skills available. You MUST activate the relevan
 - `inertia-react-development` — Develops Inertia.js v2 React client-side applications. Activates when creating React pages, forms, or navigation; using &lt;Link&gt;, &lt;Form&gt;, useForm, or router; working with deferred props, prefetching, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
 
+## Project Scope Overrides
+
+- CSRF being broadly exempt is intentional for the current NativePHP mobile-only runtime and should not be treated as a finding unless web/browser deployment is introduced.
+- Android NativePHP setup is intentionally out of scope for now; missing Android project generation is not a defect for current work.
+
 ## Conventions
 
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.

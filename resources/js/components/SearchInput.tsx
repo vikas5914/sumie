@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { search as searchRoute } from '@/routes';
 import AppIcon from './AppIcon';
 
 interface SearchInputProps {
@@ -54,7 +55,7 @@ export default function SearchInput({
     className = '',
     placeholder = 'SEARCH MANGA, AUTHORS, OR GENRES...',
     defaultValue = '',
-    action = '/search',
+    action = searchRoute.url(),
     filter,
     autoSubmit = false,
     debounceMs = 250,

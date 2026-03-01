@@ -1,5 +1,8 @@
 import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
+import { home as homeRoute, search as searchRoute } from '@/routes';
+import { toggle as toggleLibraryBookmark } from '@/routes/library/bookmark';
+import { read as readManga, show as showManga } from '@/routes/manga';
 import AppIcon from '../components/AppIcon';
 import Header from '../components/Header';
 import { resolveImageUrl } from '../lib/image';
@@ -139,7 +142,7 @@ function ChapterList({ manga, libraryStatus }: { manga: Manga; libraryStatus: Li
                         return (
                             <Link
                                 key={chapterReadId}
-                                href={`/manga/${manga.id}/read/${chapterReadId}`}
+                                href={readManga.url({ id: manga.id, chapterId: chapterReadId })}
                                 className={`group flex cursor-pointer items-center justify-between border-l-2 p-4 transition-colors hover:border-primary hover:bg-surface-dark ${
                                     isRead ? 'border-transparent' : 'border-primary'
                                 }`}
@@ -227,7 +230,7 @@ export default function MangaDetail() {
         setIsBookmarked(!wasBookmarked);
 
         router.post(
-            `/library/manga/${manga.id}/bookmark`,
+            toggleLibraryBookmark.url({ mangaId: manga.id }),
             {},
             {
                 preserveScroll: true,
@@ -245,7 +248,7 @@ export default function MangaDetail() {
             <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col border-x border-border-dark bg-background-dark">
                 <Header className="z-50 flex-row items-center justify-between backdrop-blur-md">
                     <Link
-                        href="/home"
+                        href={homeRoute.url()}
                         className="flex size-10 items-center justify-center border border-border-dark bg-surface-dark transition-colors hover:bg-border-dark hover:text-primary active:translate-y-0.5"
                     >
                         <AppIcon name="arrow_back" />
@@ -330,7 +333,7 @@ export default function MangaDetail() {
                         <div className="mb-8 flex gap-3">
                             {libraryStatus ? (
                                 <Link
-                                    href={continueChapterId ? `/manga/${manga.id}/read/${continueChapterId}` : `/manga/${manga.id}`}
+                                    href={continueChapterId ? readManga.url({ id: manga.id, chapterId: continueChapterId }) : showManga.url(manga.id)}
                                     className="flex h-12 flex-1 items-center justify-center gap-2 border border-primary bg-primary text-sm font-bold text-background-dark uppercase transition-colors hover:bg-white active:translate-y-0.5"
                                 >
                                     <AppIcon name="menu_book" />
@@ -338,7 +341,7 @@ export default function MangaDetail() {
                                 </Link>
                             ) : (
                                 <Link
-                                    href={startChapterId ? `/manga/${manga.id}/read/${startChapterId}` : `/manga/${manga.id}`}
+                                    href={startChapterId ? readManga.url({ id: manga.id, chapterId: startChapterId }) : showManga.url(manga.id)}
                                     className="flex h-12 flex-1 items-center justify-center gap-2 border border-primary bg-primary text-sm font-bold text-background-dark uppercase transition-colors hover:bg-white active:translate-y-0.5"
                                 >
                                     <AppIcon name="menu_book" />
@@ -369,7 +372,11 @@ export default function MangaDetail() {
                             {manga.genres.map((genre) => (
                                 <Link
                                     key={genre.id}
-                                    href={`/search?q=${encodeURIComponent(genre.name)}`}
+                                    href={searchRoute.url({
+                                        query: {
+                                            q: genre.name,
+                                        },
+                                    })}
                                     className="cursor-pointer border border-border-dark bg-surface-dark px-3 py-1.5 text-[10px] tracking-wider text-zinc-300 uppercase transition-colors hover:border-primary hover:bg-background-dark hover:text-primary"
                                 >
                                     {genre.name}
