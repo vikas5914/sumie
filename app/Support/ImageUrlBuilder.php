@@ -28,7 +28,7 @@ class ImageUrlBuilder
     ];
 
     /**
-     * Build an image URL, optionally proxied.
+     * Build an image URL for web and native clients.
      *
      * In NativePHP, images are pre-downloaded and served via the static
      * _assets handler because the PHP bridge corrupts binary response data.
@@ -39,15 +39,17 @@ class ImageUrlBuilder
             return null;
         }
 
+        $resolvedImageUrl = self::resolveLegacyProxyUrl($imageUrl);
+
         if (! $useProxy) {
-            return $imageUrl;
+            return $resolvedImageUrl;
         }
 
         if (env('NATIVEPHP_RUNNING')) {
-            return self::resolveForNative($imageUrl);
+            return self::resolveForNative($resolvedImageUrl);
         }
 
-        return route('image.proxy', ['encodedUrl' => base64_encode($imageUrl)]);
+        return $resolvedImageUrl;
     }
 
     /**
@@ -74,13 +76,14 @@ class ImageUrlBuilder
                 continue;
             }
 
-            $cacheKey = self::cacheKey($url);
+            $resolvedUrl = self::resolveLegacyProxyUrl($url);
+            $cacheKey = self::cacheKey($resolvedUrl);
             $cachedPath = 'covers/'.$cacheKey;
 
             if ($disk->exists($cachedPath)) {
                 $results[$index] = '/_assets/storage/covers/'.$cacheKey;
             } else {
-                $toDownload[$index] = ['url' => $url, 'key' => $cacheKey, 'path' => $cachedPath];
+                $toDownload[$index] = ['url' => $resolvedUrl, 'key' => $cacheKey, 'path' => $cachedPath];
             }
         }
 
@@ -152,5 +155,34 @@ class ImageUrlBuilder
         $extension = pathinfo($path, PATHINFO_EXTENSION) ?: 'jpg';
 
         return md5($url).'.'.$extension;
+    }
+
+    private static function resolveLegacyProxyUrl(string $imageUrl): string
+    {
+        $path = parse_url($imageUrl, PHP_URL_PATH);
+
+        if (! is_string($path)) {
+            return $imageUrl;
+        }
+
+        $prefix = '/images/proxy/';
+
+        if (! str_starts_with($path, $prefix)) {
+            return $imageUrl;
+        }
+
+        $encodedUrl = substr($path, strlen($prefix));
+
+        if ($encodedUrl === '') {
+            return $imageUrl;
+        }
+
+        $decodedUrl = base64_decode(rawurldecode($encodedUrl), true);
+
+        if (! is_string($decodedUrl) || ! preg_match('/^https?:\/\//i', $decodedUrl)) {
+            return $imageUrl;
+        }
+
+        return $decodedUrl;
     }
 }

@@ -12,7 +12,7 @@ class LibraryController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $useImageProxy = true;
+        $useImageProxy = false;
         $status = $request->query('status', 'all');
         $sort = $request->query('sort', 'last_read');
 

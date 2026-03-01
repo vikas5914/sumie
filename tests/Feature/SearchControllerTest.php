@@ -143,7 +143,7 @@ it('returns empty results for short queries', function () {
         );
 });
 
-it('always returns proxied image urls for search results', function () {
+it('returns direct image urls for search results', function () {
     $user = User::factory()->create();
     $coverUrl = 'https://srv.weebdex.net/covers/test/cover.jpg';
 
@@ -161,12 +161,10 @@ it('always returns proxied image urls for search results', function () {
         ],
     ]));
 
-    $encodedUrl = base64_encode($coverUrl);
-
     actingAs($user)
         ->get(route('search', ['q' => 'Proxy']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('results.0.cover_image_url', route('image.proxy', ['encodedUrl' => $encodedUrl]))
+            ->where('results.0.cover_image_url', $coverUrl)
         );
 });

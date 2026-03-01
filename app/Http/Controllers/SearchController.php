@@ -19,7 +19,7 @@ class SearchController extends Controller
 
     public function index(Request $request, WeebdexApiService $weebdex): Response
     {
-        $useImageProxy = true;
+        $useImageProxy = false;
         $query = trim((string) $request->query('q', ''));
         $filter = strtolower(trim((string) $request->query('filter', 'all')));
         $filter = $filter === '' ? 'all' : $filter;

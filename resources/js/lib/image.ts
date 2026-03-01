@@ -1,13 +1,5 @@
 const IMAGE_PROXY_PATH_PREFIX = '/images/proxy/';
 
-function encodeBase64(value: string): string {
-    if (typeof window !== 'undefined' && typeof window.btoa === 'function') {
-        return window.btoa(value);
-    }
-
-    return btoa(value);
-}
-
 function decodeBase64(value: string): string | null {
     try {
         if (typeof window !== 'undefined' && typeof window.atob === 'function') {
@@ -45,24 +37,10 @@ function extractOriginalImageUrl(imageUrl: string): string {
     }
 }
 
-function isNativeApp(): boolean {
-    if (typeof document === 'undefined') return false;
-
-    return document.body.classList.contains('nativephp-ios') || document.body.classList.contains('nativephp-android');
-}
-
 export function resolveImageUrl(imageUrl: string | null | undefined): string | null {
     if (!imageUrl) {
         return null;
     }
 
-    // In NativePHP, the backend already returns /_assets/ URLs pointing to
-    // pre-downloaded files served by the static handler (bypasses PHP bridge).
-    if (isNativeApp()) {
-        return extractOriginalImageUrl(imageUrl);
-    }
-
-    const originalImageUrl = extractOriginalImageUrl(imageUrl);
-
-    return `${IMAGE_PROXY_PATH_PREFIX}${encodeBase64(originalImageUrl)}`;
+    return extractOriginalImageUrl(imageUrl);
 }
