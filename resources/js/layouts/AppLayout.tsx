@@ -26,10 +26,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="min-h-screen bg-background-dark font-mono text-text-light antialiased selection:bg-primary selection:text-black">
-            <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-hidden border-x border-border-dark pb-24">
+            <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden rounded-t-lg border-x border-border-dark pb-24">
                 {children}
 
-                <nav className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md">
+                <nav className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md bg-background-dark/95 backdrop-blur-sm" style={{ paddingBottom: 'var(--inset-bottom, 0px)' }}>
                     <div className="flex h-16 items-center justify-around border-t border-border-dark bg-background-dark/95 px-2 backdrop-blur-sm">
                         <Link
                             href={homePath}

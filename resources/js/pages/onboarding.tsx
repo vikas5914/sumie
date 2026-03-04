@@ -17,7 +17,7 @@ export default function Onboarding() {
                 <div className="pointer-events-none absolute top-0 right-0 left-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
                 {/* Main Container */}
-                <div className="relative z-10 mx-auto flex h-screen w-full max-w-md flex-col">
+                <div className="relative z-10 mx-auto flex w-full max-w-md flex-col">
                     {/* Top Section - Logo & Brand */}
                     <div className="flex flex-1 flex-col items-center justify-center px-8">
                         {/* Logo Mark */}

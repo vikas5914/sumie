@@ -46,7 +46,7 @@ function ReaderPagesSkeleton({ isPageByPageMode }: { isPageByPageMode: boolean }
                 <div
                     key={index}
                     className={`w-full animate-pulse border border-border-dark bg-surface-dark ${
-                        isPageByPageMode ? 'h-[calc(100vh-14rem)] snap-start' : 'aspect-[2/3]'
+                        isPageByPageMode ? 'h-[calc(100vh-14rem)] snap-start' : 'aspect-2/3'
                     }`}
                 />
             ))}
@@ -77,7 +77,7 @@ export default function MangaReader() {
         <div className="min-h-screen bg-background-dark font-mono text-text-light antialiased selection:bg-primary selection:text-black">
             <Head title={`${manga.title} - Chapter ${chapterLabel}`} />
 
-            <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-hidden border-x border-border-dark pb-24">
+            <div className="relative mx-auto flex w-full max-w-md flex-col overflow-hidden border-x border-border-dark pb-24">
                 <Header className="bg-background-dark/90">
                     <div className="flex w-full items-center justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-2">
@@ -145,7 +145,7 @@ export default function MangaReader() {
                     </Deferred>
                 </main>
 
-                <footer className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md border-t border-border-dark bg-background-dark/95 backdrop-blur-sm">
+                <footer className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md border-t border-border-dark bg-background-dark/95 backdrop-blur-sm" style={{ paddingBottom: 'var(--inset-bottom, 0px)' }}>
                     <div className="flex w-full gap-2 px-4 py-3">
                         {navigation.previous_chapter_id ? (
                             <Link

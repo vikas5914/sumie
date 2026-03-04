@@ -98,8 +98,6 @@ export default function Home() {
     const [pullDistance, setPullDistance] = useState(0);
     usePoll(5 * 60 * 1000, {
         only: ['homeFeed'],
-        preserveState: true,
-        preserveScroll: true,
         onStart: () => setIsRefreshing(true),
         onFinish: () => setIsRefreshing(false),
     });
@@ -124,8 +122,6 @@ export default function Home() {
         if (pullDistance > 50) {
             router.reload({
                 only: ['homeFeed'],
-                preserveState: true,
-                preserveScroll: true,
                 onStart: () => setIsRefreshing(true),
                 onFinish: () => setIsRefreshing(false),
             });
@@ -141,8 +137,8 @@ export default function Home() {
             {/* Pull to refresh indicator */}
             {pullDistance > 0 && (
                 <div
-                    className="fixed top-0 right-0 left-0 z-50 flex items-center justify-center bg-surface-dark transition-all"
-                    style={{ height: `${pullDistance}px` }}
+                    className="fixed right-0 left-0 z-50 flex items-center justify-center bg-surface-dark transition-all"
+                    style={{ top: 'var(--inset-top, 0px)', height: `${pullDistance}px` }}
                 >
                     <div className="flex items-center gap-2 text-sm text-zinc-400">
                         <AppIcon name="keyboard_arrow_down" className={`transition-transform ${pullDistance > 50 ? 'rotate-180' : ''}`} />
@@ -153,7 +149,7 @@ export default function Home() {
 
             {/* Refreshing indicator */}
             {isRefreshing && (
-                <div className="fixed top-0 right-0 left-0 z-50 flex items-center justify-center bg-primary py-2 text-xs font-bold text-background-dark">
+                <div className="fixed top-[var(--inset-top,0px)] right-0 left-0 z-50 flex items-center justify-center bg-primary py-2 text-xs font-bold text-background-dark">
                     <AppIcon name="sync" className="mr-2 animate-spin" />
                     Updating manga...
                 </div>
@@ -198,7 +194,7 @@ export default function Home() {
                                                 ),
                                             }}
                                         ></div>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/60 to-transparent"></div>
+                                        <div className="absolute inset-0 bg-linear-to-t from-background-dark via-background-dark/60 to-transparent"></div>
                                         <div className="absolute right-0 bottom-0 left-0 flex flex-col items-start gap-3 p-5">
                                             <span className="bg-primary px-3 py-1 text-xs font-bold tracking-widest text-background-dark uppercase shadow-lg shadow-primary/40">
                                                 #1 TRENDING

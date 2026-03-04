@@ -245,7 +245,7 @@ export default function MangaDetail() {
     return (
         <div className="min-h-screen bg-background-dark font-mono text-text-light antialiased selection:bg-primary selection:text-black">
             <Head title={manga.title} />
-            <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col border-x border-border-dark bg-background-dark">
+            <div className="relative mx-auto flex w-full max-w-md flex-col border-x border-border-dark bg-background-dark">
                 <Header className="z-50 flex-row items-center justify-between backdrop-blur-md">
                     <Link
                         href={homeRoute.url()}
