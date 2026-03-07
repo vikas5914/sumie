@@ -28,15 +28,15 @@
   &nbsp;&nbsp;
   <img src="screenshots/2.jpg" width="180" alt="Search" />
   &nbsp;&nbsp;
-  <img src="screenshots/5.jpg" width="180" alt="Library" />
-  &nbsp;&nbsp;
-  <img src="screenshots/6.jpg" width="180" alt="Manga Detail" />
-</p>
-
-<p align="center">
   <img src="screenshots/3.jpg" width="180" alt="Reader" />
   &nbsp;&nbsp;
   <img src="screenshots/4.jpg" width="180" alt="Profile" />
+</p>
+
+<p align="center">
+  <img src="screenshots/5.jpg" width="180" alt="Library" />
+  &nbsp;&nbsp;
+  <img src="screenshots/6.jpg" width="180" alt="Manga Detail" />
   &nbsp;&nbsp;
   <img src="screenshots/7.jpg" width="180" alt="Screenshot 7" />
 </p>
