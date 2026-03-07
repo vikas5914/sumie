@@ -12,12 +12,8 @@
     "paths": {
         "/author": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Author"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Author"],
                 "summary": "Get Author List",
                 "parameters": [
                     {
@@ -75,15 +71,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Author"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Author"],
                 "summary": "Create Author",
                 "parameters": [
                     {
@@ -120,12 +110,8 @@
         },
         "/author/{id}": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Author"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Author"],
                 "summary": "Get Author",
                 "parameters": [
                     {
@@ -163,15 +149,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Author"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Author"],
                 "summary": "Update Author",
                 "parameters": [
                     {
@@ -224,9 +204,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Author"
-                ],
+                "tags": ["Author"],
                 "summary": "Delete Author",
                 "parameters": [
                     {
@@ -258,12 +236,8 @@
         },
         "/chapter": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chapter"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Chapter"],
                 "summary": "Search Chapters",
                 "parameters": [
                     {
@@ -296,12 +270,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -312,13 +281,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "shounen",
-                                "shoujo",
-                                "josei",
-                                "seinen",
-                                "none"
-                            ],
+                            "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -376,10 +339,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -395,12 +355,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "ongoing",
-                                "completed",
-                                "hiatus",
-                                "cancelled"
-                            ],
+                            "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -448,12 +403,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "AND",
-                            "OR"
-                        ],
+                        "enum": ["0", "1", "AND", "OR"],
                         "type": "string",
                         "default": "AND",
                         "description": "Mode for tag inclusion",
@@ -461,12 +411,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "OR",
-                            "AND"
-                        ],
+                        "enum": ["0", "1", "OR", "AND"],
                         "type": "string",
                         "default": "OR",
                         "description": "Mode for tag exclusion",
@@ -514,12 +459,8 @@
         },
         "/chapter/feed": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chapter"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Chapter"],
                 "summary": "Get Latest Feed",
                 "parameters": [
                     {
@@ -552,12 +493,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -568,13 +504,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "shounen",
-                                "shoujo",
-                                "josei",
-                                "seinen",
-                                "none"
-                            ],
+                            "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -632,10 +562,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -651,12 +578,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "ongoing",
-                                "completed",
-                                "hiatus",
-                                "cancelled"
-                            ],
+                            "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -704,12 +626,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "AND",
-                            "OR"
-                        ],
+                        "enum": ["0", "1", "AND", "OR"],
                         "type": "string",
                         "default": "AND",
                         "description": "Mode for tag inclusion",
@@ -717,12 +634,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "OR",
-                            "AND"
-                        ],
+                        "enum": ["0", "1", "OR", "AND"],
                         "type": "string",
                         "default": "OR",
                         "description": "Mode for tag exclusion",
@@ -770,23 +682,14 @@
         },
         "/chapter/top": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chapter"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Chapter"],
                 "summary": "Get Top Chapters",
                 "parameters": [
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -810,11 +713,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "24h",
-                            "7d",
-                            "30d"
-                        ],
+                        "enum": ["24h", "7d", "30d"],
                         "type": "string",
                         "default": "7d",
                         "name": "time",
@@ -840,12 +739,8 @@
         "/chapter/updates": {
             "get": {
                 "description": "Returns only the most recent chapter of each manga. Use this endpoint if you don't want your feed to be filled with multiple chapters from the same manga.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chapter"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Chapter"],
                 "summary": "Get Latest Updates",
                 "parameters": [
                     {
@@ -878,12 +773,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -894,13 +784,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "shounen",
-                                "shoujo",
-                                "josei",
-                                "seinen",
-                                "none"
-                            ],
+                            "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -958,10 +842,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -977,12 +858,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "ongoing",
-                                "completed",
-                                "hiatus",
-                                "cancelled"
-                            ],
+                            "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -1030,12 +906,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "AND",
-                            "OR"
-                        ],
+                        "enum": ["0", "1", "AND", "OR"],
                         "type": "string",
                         "default": "AND",
                         "description": "Mode for tag inclusion",
@@ -1043,12 +914,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "OR",
-                            "AND"
-                        ],
+                        "enum": ["0", "1", "OR", "AND"],
                         "type": "string",
                         "default": "OR",
                         "description": "Mode for tag exclusion",
@@ -1096,12 +962,8 @@
         },
         "/chapter/{id}": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chapter"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Chapter"],
                 "summary": "Get Chapter",
                 "parameters": [
                     {
@@ -1139,15 +1001,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chapter"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Chapter"],
                 "summary": "Update Chapter",
                 "parameters": [
                     {
@@ -1200,9 +1056,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Chapter"
-                ],
+                "tags": ["Chapter"],
                 "summary": "Remove Chapter",
                 "parameters": [
                     {
@@ -1234,12 +1088,8 @@
         },
         "/chapter/{id}/statistics": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Statistics"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Statistics"],
                 "summary": "Get Chapter Statistics",
                 "parameters": [
                     {
@@ -1279,12 +1129,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Client"],
                 "summary": "Get API Clients",
                 "responses": {
                     "200": {
@@ -1307,15 +1153,9 @@
                         "Cookie": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Client"],
                 "summary": "Create API Client",
                 "parameters": [
                     {
@@ -1360,15 +1200,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Client"],
                 "summary": "Update API Client",
                 "parameters": [
                     {
@@ -1418,9 +1252,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Client"
-                ],
+                "tags": ["Client"],
                 "summary": "Delete API Client",
                 "parameters": [
                     {
@@ -1457,9 +1289,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Client"
-                ],
+                "tags": ["Client"],
                 "summary": "Regenerate API Client Secret",
                 "parameters": [
                     {
@@ -1491,12 +1321,8 @@
         },
         "/cover/{id}": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Cover"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Cover"],
                 "summary": "Get Cover",
                 "parameters": [
                     {
@@ -1534,15 +1360,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Cover"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Cover"],
                 "summary": "Update Cover",
                 "parameters": [
                     {
@@ -1595,9 +1415,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Cover"
-                ],
+                "tags": ["Cover"],
                 "summary": "Remove Cover",
                 "parameters": [
                     {
@@ -1637,15 +1455,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Cover"
-                ],
+                "consumes": ["multipart/form-data"],
+                "produces": ["application/json"],
+                "tags": ["Cover"],
                 "summary": "Upload Cover",
                 "parameters": [
                     {
@@ -1715,14 +1527,8 @@
         "/covers/{mangaid}/{coverid}.{ext}": {
             "get": {
                 "description": "**Cover domain: srv.weebdex.net**",
-                "produces": [
-                    "image/jpeg",
-                    "image/png",
-                    "image/webp"
-                ],
-                "tags": [
-                    "Image"
-                ],
+                "produces": ["image/jpeg", "image/png", "image/webp"],
+                "tags": ["Image"],
                 "summary": "Get Cover Image",
                 "parameters": [
                     {
@@ -1740,14 +1546,7 @@
                         "required": true
                     },
                     {
-                        "enum": [
-                            "gif",
-                            "jpg",
-                            "png",
-                            "webp",
-                            "256.webp",
-                            "512.webp"
-                        ],
+                        "enum": ["gif", "jpg", "png", "webp", "256.webp", "512.webp"],
                         "type": "string",
                         "description": "File extension",
                         "name": "ext",
@@ -1774,14 +1573,8 @@
         "/data/{chapterid}/{name}": {
             "get": {
                 "description": "**Use the domain from the `node` field to avoid potential issues.**",
-                "produces": [
-                    "image/jpeg",
-                    "image/png",
-                    "image/webp"
-                ],
-                "tags": [
-                    "Image"
-                ],
+                "produces": ["image/jpeg", "image/png", "image/webp"],
+                "tags": ["Image"],
                 "summary": "Get Chapter Page Image",
                 "parameters": [
                     {
@@ -1817,12 +1610,8 @@
         },
         "/group": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Scanlation Group"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Scanlation Group"],
                 "summary": "Get Scanlation Group List",
                 "parameters": [
                     {
@@ -1880,15 +1669,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Scanlation Group"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Scanlation Group"],
                 "summary": "Create Scanlation Group",
                 "parameters": [
                     {
@@ -1925,12 +1708,8 @@
         },
         "/group/{id}": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Scanlation Group"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Scanlation Group"],
                 "summary": "Get Scanlation Group",
                 "parameters": [
                     {
@@ -1968,15 +1747,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Scanlation Group"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Scanlation Group"],
                 "summary": "Update Scanlation Group",
                 "parameters": [
                     {
@@ -2029,9 +1802,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Scanlation Group"
-                ],
+                "tags": ["Scanlation Group"],
                 "summary": "Delete Scanlation Group",
                 "parameters": [
                     {
@@ -2063,12 +1834,8 @@
         },
         "/group/{id}/statistics": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Statistics"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Statistics"],
                 "summary": "Get Group Statistics",
                 "parameters": [
                     {
@@ -2100,12 +1867,8 @@
         },
         "/manga": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Search Manga",
                 "parameters": [
                     {
@@ -2147,12 +1910,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -2163,13 +1921,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "shounen",
-                                "shoujo",
-                                "josei",
-                                "seinen",
-                                "none"
-                            ],
+                            "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -2182,12 +1934,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "false",
-                            "true"
-                        ],
+                        "enum": ["0", "1", "false", "true"],
                         "type": "string",
                         "default": "0",
                         "name": "hasChapters",
@@ -2222,10 +1969,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "description": "Sort order",
@@ -2261,12 +2005,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "ongoing",
-                                "completed",
-                                "hiatus",
-                                "cancelled"
-                            ],
+                            "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -2299,12 +2038,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "AND",
-                            "OR"
-                        ],
+                        "enum": ["0", "1", "AND", "OR"],
                         "type": "string",
                         "default": "AND",
                         "description": "Mode for tag inclusion",
@@ -2312,12 +2046,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "OR",
-                            "AND"
-                        ],
+                        "enum": ["0", "1", "OR", "AND"],
                         "type": "string",
                         "default": "OR",
                         "description": "Mode for tag exclusion",
@@ -2365,15 +2094,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Create Manga",
                 "parameters": [
                     {
@@ -2407,12 +2130,8 @@
         },
         "/manga/:id/relations": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Get Manga Relations",
                 "parameters": [
                     {
@@ -2453,15 +2172,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Create Manga Relation",
                 "parameters": [
                     {
@@ -2511,12 +2224,8 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "consumes": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Delete Manga Relation",
                 "parameters": [
                     {
@@ -2565,12 +2274,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Search Manga Draft",
                 "parameters": [
                     {
@@ -2582,10 +2287,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "description": "Sort order",
@@ -2600,12 +2302,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "createdAt",
-                            "updatedAt",
-                            "title",
-                            "year"
-                        ],
+                        "enum": ["createdAt", "updatedAt", "title", "year"],
                         "type": "string",
                         "default": "createdAt",
                         "description": "Field to sort by",
@@ -2651,12 +2348,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Get Manga Draft",
                 "parameters": [
                     {
@@ -2699,12 +2392,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Submit Manga Draft",
                 "parameters": [
                     {
@@ -2739,12 +2428,8 @@
         },
         "/manga/random": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Get Random Manga",
                 "parameters": [
                     {
@@ -2772,12 +2457,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -2788,13 +2468,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "shounen",
-                                "shoujo",
-                                "josei",
-                                "seinen",
-                                "none"
-                            ],
+                            "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -2802,12 +2476,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "false",
-                            "true"
-                        ],
+                        "enum": ["0", "1", "false", "true"],
                         "type": "string",
                         "default": "0",
                         "name": "hasChapters",
@@ -2836,12 +2505,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "ongoing",
-                                "completed",
-                                "hiatus",
-                                "cancelled"
-                            ],
+                            "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -2869,12 +2533,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "AND",
-                            "OR"
-                        ],
+                        "enum": ["0", "1", "AND", "OR"],
                         "type": "string",
                         "default": "AND",
                         "description": "Mode for tag inclusion",
@@ -2882,12 +2541,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "OR",
-                            "AND"
-                        ],
+                        "enum": ["0", "1", "OR", "AND"],
                         "type": "string",
                         "default": "OR",
                         "description": "Mode for tag exclusion",
@@ -2932,12 +2586,8 @@
         },
         "/manga/tag": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Tag"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Tag"],
                 "summary": "Get Tag List",
                 "parameters": [
                     {
@@ -2989,23 +2639,14 @@
         },
         "/manga/top": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Get Top Manga",
                 "parameters": [
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -3029,21 +2670,14 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "views",
-                            "read"
-                        ],
+                        "enum": ["views", "read"],
                         "type": "string",
                         "default": "views",
                         "name": "rank",
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "24h",
-                            "7d",
-                            "30d"
-                        ],
+                        "enum": ["24h", "7d", "30d"],
                         "type": "string",
                         "default": "7d",
                         "name": "time",
@@ -3068,12 +2702,8 @@
         },
         "/manga/{id}": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Get Manga",
                 "parameters": [
                     {
@@ -3111,15 +2741,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Update Manga",
                 "parameters": [
                     {
@@ -3172,9 +2796,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Manga"
-                ],
+                "tags": ["Manga"],
                 "summary": "Delete Manga",
                 "parameters": [
                     {
@@ -3206,12 +2828,8 @@
         },
         "/manga/{id}/aggregate": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chapter"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Chapter"],
                 "summary": "Get Aggregated Chapter List",
                 "parameters": [
                     {
@@ -3253,12 +2871,8 @@
         },
         "/manga/{id}/chapters": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chapter"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Chapter"],
                 "summary": "Get Chapter List",
                 "parameters": [
                     {
@@ -3299,10 +2913,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -3316,10 +2927,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "publishedAt",
-                            "name"
-                        ],
+                        "enum": ["publishedAt", "name"],
                         "type": "string",
                         "default": "name",
                         "name": "sort",
@@ -3389,12 +2997,8 @@
         },
         "/manga/{id}/covers": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Cover"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Cover"],
                 "summary": "Get Manga Covers",
                 "parameters": [
                     {
@@ -3429,12 +3033,8 @@
         },
         "/manga/{id}/recommendations": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Manga"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Manga"],
                 "summary": "Get Recommendations",
                 "parameters": [
                     {
@@ -3466,12 +3066,8 @@
         },
         "/manga/{id}/statistics": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Statistics"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Statistics"],
                 "summary": "Get Manga Statistics",
                 "parameters": [
                     {
@@ -3511,24 +3107,12 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Report"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Report"],
                 "summary": "Search Reports",
                 "parameters": [
                     {
-                        "enum": [
-                            "user",
-                            "manga",
-                            "author",
-                            "chapter",
-                            "scanlation_group",
-                            "thread",
-                            "reply"
-                        ],
+                        "enum": ["user", "manga", "author", "chapter", "scanlation_group", "thread", "reply"],
                         "type": "string",
                         "name": "category",
                         "in": "query"
@@ -3547,10 +3131,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -3569,28 +3150,16 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "createdAt"
-                        ],
+                        "enum": ["createdAt"],
                         "type": "string",
                         "default": "createdAt",
                         "name": "sort",
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "refused",
-                            "waiting",
-                            "accepted",
-                            "autoresolved"
-                        ],
+                        "enum": ["refused", "waiting", "accepted", "autoresolved"],
                         "type": "string",
-                        "x-enum-varnames": [
-                            "ReportStatusRefused",
-                            "ReportStatusWaiting",
-                            "ReportStatusAccepted",
-                            "ReportStatusAutoresolved"
-                        ],
+                        "x-enum-varnames": ["ReportStatusRefused", "ReportStatusWaiting", "ReportStatusAccepted", "ReportStatusAutoresolved"],
                         "name": "status",
                         "in": "query"
                     }
@@ -3614,12 +3183,8 @@
                 }
             },
             "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Report"
-                ],
+                "consumes": ["application/json"],
+                "tags": ["Report"],
                 "summary": "Create Report",
                 "parameters": [
                     {
@@ -3650,24 +3215,12 @@
         },
         "/report/reasons/{category}": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Report"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Report"],
                 "summary": "Get Report Reason List",
                 "parameters": [
                     {
-                        "enum": [
-                            "user",
-                            "manga",
-                            "author",
-                            "chapter",
-                            "scanlation_group",
-                            "thread",
-                            "reply"
-                        ],
+                        "enum": ["user", "manga", "author", "chapter", "scanlation_group", "thread", "reply"],
                         "type": "string",
                         "description": "Category",
                         "name": "category",
@@ -3696,12 +3249,8 @@
         },
         "/thread/{id}": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Thread"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Thread"],
                 "summary": "Get Thread",
                 "parameters": [
                     {
@@ -3733,12 +3282,8 @@
         },
         "/thread/{id}/replies": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Thread"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Thread"],
                 "summary": "Get Replies",
                 "parameters": [
                     {
@@ -3757,10 +3302,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -3801,15 +3343,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Thread"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Thread"],
                 "summary": "Create Reply",
                 "parameters": [
                     {
@@ -3861,15 +3397,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Thread"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Thread"],
                 "summary": "Update Reply",
                 "parameters": [
                     {
@@ -3919,9 +3449,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Thread"
-                ],
+                "tags": ["Thread"],
                 "summary": "Remove Reply",
                 "parameters": [
                     {
@@ -3960,12 +3488,8 @@
         },
         "/thread/{id}/statistics": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Statistics"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Statistics"],
                 "summary": "Get Thread Statistics",
                 "parameters": [
                     {
@@ -3998,24 +3522,15 @@
         "/top/manga": {
             "get": {
                 "description": "**Deprecated:** use `/manga/top` instead.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Top"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Top"],
                 "summary": "Get Top Manga",
                 "deprecated": true,
                 "parameters": [
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -4039,21 +3554,14 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "views",
-                            "read"
-                        ],
+                        "enum": ["views", "read"],
                         "type": "string",
                         "default": "views",
                         "name": "rank",
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "24h",
-                            "7d",
-                            "30d"
-                        ],
+                        "enum": ["24h", "7d", "30d"],
                         "type": "string",
                         "default": "7d",
                         "name": "time",
@@ -4086,12 +3594,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Upload"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Upload"],
                 "summary": "Get Current Upload Session",
                 "responses": {
                     "200": {
@@ -4122,15 +3626,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Upload"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Upload"],
                 "summary": "Begin Upload Session",
                 "parameters": [
                     {
@@ -4175,15 +3673,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Upload"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Upload"],
                 "summary": "Begin Chapter Edit Session",
                 "parameters": [
                     {
@@ -4238,12 +3730,8 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Upload"
-                ],
+                "consumes": ["application/json"],
+                "tags": ["Upload"],
                 "summary": "Check if approval is required",
                 "parameters": [
                     {
@@ -4285,15 +3773,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Upload"
-                ],
+                "consumes": ["multipart/form-data"],
+                "produces": ["application/json"],
+                "tags": ["Upload"],
                 "summary": "Add Files to Upload Session",
                 "parameters": [
                     {
@@ -4341,12 +3823,8 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Upload"
-                ],
+                "consumes": ["application/json"],
+                "tags": ["Upload"],
                 "summary": "Delete Upload Session",
                 "parameters": [
                     {
@@ -4383,9 +3861,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Upload"
-                ],
+                "tags": ["Upload"],
                 "summary": "Delete Files from Upload Session",
                 "parameters": [
                     {
@@ -4434,15 +3910,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Upload"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Upload"],
                 "summary": "Commit Upload Session",
                 "parameters": [
                     {
@@ -4491,9 +3961,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Upload"
-                ],
+                "tags": ["Upload"],
                 "summary": "Delete File from Upload Session",
                 "parameters": [
                     {
@@ -4537,12 +4005,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
+                "produces": ["application/json"],
+                "tags": ["User"],
                 "summary": "Get User List",
                 "parameters": [
                     {
@@ -4602,12 +4066,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Follows"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Follows"],
                 "summary": "[Manga] Get Latest Feed",
                 "parameters": [
                     {
@@ -4640,12 +4100,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -4656,13 +4111,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "shounen",
-                                "shoujo",
-                                "josei",
-                                "seinen",
-                                "none"
-                            ],
+                            "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -4720,10 +4169,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -4739,12 +4185,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "ongoing",
-                                "completed",
-                                "hiatus",
-                                "cancelled"
-                            ],
+                            "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -4792,12 +4233,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "AND",
-                            "OR"
-                        ],
+                        "enum": ["0", "1", "AND", "OR"],
                         "type": "string",
                         "default": "AND",
                         "description": "Mode for tag inclusion",
@@ -4805,12 +4241,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "OR",
-                            "AND"
-                        ],
+                        "enum": ["0", "1", "OR", "AND"],
                         "type": "string",
                         "default": "OR",
                         "description": "Mode for tag exclusion",
@@ -4869,12 +4300,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Follows"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Follows"],
                 "summary": "[Group] Search",
                 "parameters": [
                     {
@@ -4886,10 +4313,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -4903,10 +4327,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "name",
-                            "followedAt"
-                        ],
+                        "enum": ["name", "followedAt"],
                         "type": "string",
                         "default": "name",
                         "name": "sort",
@@ -4947,9 +4368,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Follows"
-                ],
+                "tags": ["Follows"],
                 "summary": "[Group] Get Follow Status",
                 "parameters": [
                     {
@@ -4987,9 +4406,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Follows"
-                ],
+                "tags": ["Follows"],
                 "summary": "[Group] Follow",
                 "parameters": [
                     {
@@ -5027,9 +4444,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Follows"
-                ],
+                "tags": ["Follows"],
                 "summary": "[Group] Unfollow",
                 "parameters": [
                     {
@@ -5069,12 +4484,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Follows"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Follows"],
                 "summary": "[Manga] Search",
                 "parameters": [
                     {
@@ -5109,12 +4520,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "safe",
-                                "suggestive",
-                                "erotica",
-                                "pornographic"
-                            ],
+                            "enum": ["safe", "suggestive", "erotica", "pornographic"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -5124,13 +4530,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "shounen",
-                                "shoujo",
-                                "josei",
-                                "seinen",
-                                "none"
-                            ],
+                            "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -5138,12 +4538,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "false",
-                            "true"
-                        ],
+                        "enum": ["0", "1", "false", "true"],
                         "type": "string",
                         "default": "0",
                         "name": "hasChapters",
@@ -5178,10 +4573,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "description": "Sort order",
@@ -5198,14 +4590,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "reading",
-                                "plan_to_read",
-                                "completed",
-                                "on_hold",
-                                "re_reading",
-                                "dropped"
-                            ],
+                            "enum": ["reading", "plan_to_read", "completed", "on_hold", "re_reading", "dropped"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -5234,12 +4619,7 @@
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "ongoing",
-                                "completed",
-                                "hiatus",
-                                "cancelled"
-                            ],
+                            "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -5272,12 +4652,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "AND",
-                            "OR"
-                        ],
+                        "enum": ["0", "1", "AND", "OR"],
                         "type": "string",
                         "default": "AND",
                         "description": "Mode for tag inclusion",
@@ -5285,12 +4660,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "0",
-                            "1",
-                            "OR",
-                            "AND"
-                        ],
+                        "enum": ["0", "1", "OR", "AND"],
                         "type": "string",
                         "default": "OR",
                         "description": "Mode for tag exclusion",
@@ -5348,12 +4718,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "text/csv"
-                ],
-                "tags": [
-                    "Follows"
-                ],
+                "produces": ["text/csv"],
+                "tags": ["Follows"],
                 "summary": "[Manga] Export",
                 "responses": {
                     "200": {
@@ -5384,12 +4750,8 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Follows"
-                ],
+                "consumes": ["application/json"],
+                "tags": ["Follows"],
                 "summary": "[Manga] Import",
                 "parameters": [
                     {
@@ -5428,12 +4790,8 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Follows"
-                ],
+                "consumes": ["application/json"],
+                "tags": ["Follows"],
                 "summary": "[Manga] Update Follow Status",
                 "parameters": [
                     {
@@ -5480,9 +4838,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Follows"
-                ],
+                "tags": ["Follows"],
                 "summary": "[Manga] Unfollow",
                 "parameters": [
                     {
@@ -5522,12 +4878,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Follows"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Follows"],
                 "summary": "[User] Search",
                 "parameters": [
                     {
@@ -5539,10 +4891,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
+                        "enum": ["asc", "desc"],
                         "type": "string",
                         "default": "desc",
                         "name": "order",
@@ -5556,10 +4905,7 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "name",
-                            "followedAt"
-                        ],
+                        "enum": ["name", "followedAt"],
                         "type": "string",
                         "default": "name",
                         "name": "sort",
@@ -5600,9 +4946,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Follows"
-                ],
+                "tags": ["Follows"],
                 "summary": "[User] Get Follow Status",
                 "parameters": [
                     {
@@ -5640,9 +4984,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Follows"
-                ],
+                "tags": ["Follows"],
                 "summary": "[User] Follow",
                 "parameters": [
                     {
@@ -5680,9 +5022,7 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "Follows"
-                ],
+                "tags": ["Follows"],
                 "summary": "[User] Unfollow",
                 "parameters": [
                     {
@@ -5722,12 +5062,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "History"
-                ],
+                "produces": ["application/json"],
+                "tags": ["History"],
                 "summary": "Get Manga Read History Batch",
                 "parameters": [
                     {
@@ -5775,12 +5111,8 @@
                         "Bearer": []
                     }
                 ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "History"
-                ],
+                "produces": ["application/json"],
+                "tags": ["History"],
                 "summary": "Get Manga Read History",
                 "parameters": [
                     {
@@ -5822,15 +5154,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "History"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["History"],
                 "summary": "Update Manga Read History Batch",
                 "parameters": [
                     {
@@ -5871,12 +5197,8 @@
         },
         "/user/{id}": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
+                "produces": ["application/json"],
+                "tags": ["User"],
                 "summary": "Get User",
                 "parameters": [
                     {
@@ -5914,15 +5236,9 @@
                         "Bearer": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["User"],
                 "summary": "Update User",
                 "parameters": [
                     {
@@ -5969,12 +5285,8 @@
         },
         "/user/{id}/statistics": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Statistics"
-                ],
+                "produces": ["application/json"],
+                "tags": ["Statistics"],
                 "summary": "Get User Statistics",
                 "parameters": [
                     {
@@ -6008,9 +5320,7 @@
     "definitions": {
         "controllers.BeginChapterEditSessionRequest": {
             "type": "object",
-            "required": [
-                "version"
-            ],
+            "required": ["version"],
             "properties": {
                 "replace": {
                     "type": "boolean"
@@ -6023,9 +5333,7 @@
         },
         "controllers.BeginUploadSessionRequest": {
             "type": "object",
-            "required": [
-                "manga"
-            ],
+            "required": ["manga"],
             "properties": {
                 "groups": {
                     "type": "array",
@@ -6041,9 +5349,7 @@
         },
         "controllers.CheckApprovalRequiredRequest": {
             "type": "object",
-            "required": [
-                "language"
-            ],
+            "required": ["language"],
             "properties": {
                 "language": {
                     "type": "string",
@@ -6055,16 +5361,11 @@
         },
         "controllers.CommitUploadSessionRequest": {
             "type": "object",
-            "required": [
-                "draft",
-                "page_order"
-            ],
+            "required": ["draft", "page_order"],
             "properties": {
                 "draft": {
                     "type": "object",
-                    "required": [
-                        "language"
-                    ],
+                    "required": ["language"],
                     "properties": {
                         "chapter": {
                             "type": "string",
@@ -6099,9 +5400,7 @@
         },
         "controllers.CreateAuthorRequest": {
             "type": "object",
-            "required": [
-                "name"
-            ],
+            "required": ["name"],
             "properties": {
                 "description": {
                     "type": "string",
@@ -6150,9 +5449,7 @@
         },
         "controllers.CreateClientRequest": {
             "type": "object",
-            "required": [
-                "name"
-            ],
+            "required": ["name"],
             "properties": {
                 "name": {
                     "type": "string",
@@ -6163,9 +5460,7 @@
         },
         "controllers.CreateGroupRequest": {
             "type": "object",
-            "required": [
-                "name"
-            ],
+            "required": ["name"],
             "properties": {
                 "contact_email": {
                     "type": "string",
@@ -6204,10 +5499,7 @@
         },
         "controllers.CreateMangaRelationRequest": {
             "type": "object",
-            "required": [
-                "related_id",
-                "type"
-            ],
+            "required": ["related_id", "type"],
             "properties": {
                 "related_id": {
                     "type": "string"
@@ -6241,14 +5533,7 @@
         },
         "controllers.CreateMangaRequest": {
             "type": "object",
-            "required": [
-                "artists",
-                "authors",
-                "content_rating",
-                "language",
-                "status",
-                "title"
-            ],
+            "required": ["artists", "authors", "content_rating", "language", "status", "title"],
             "properties": {
                 "alt_titles": {
                     "type": "object",
@@ -6272,12 +5557,7 @@
                     }
                 },
                 "content_rating": {
-                    "enum": [
-                        "safe",
-                        "suggestive",
-                        "erotica",
-                        "pornographic"
-                    ],
+                    "enum": ["safe", "suggestive", "erotica", "pornographic"],
                     "allOf": [
                         {
                             "$ref": "#/definitions/ContentRating"
@@ -6285,13 +5565,7 @@
                     ]
                 },
                 "demographic": {
-                    "enum": [
-                        "shounen",
-                        "shoujo",
-                        "josei",
-                        "seinen",
-                        "none"
-                    ],
+                    "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                     "allOf": [
                         {
                             "$ref": "#/definitions/Demographic"
@@ -6325,12 +5599,7 @@
                     }
                 },
                 "status": {
-                    "enum": [
-                        "ongoing",
-                        "completed",
-                        "hiatus",
-                        "cancelled"
-                    ],
+                    "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                     "allOf": [
                         {
                             "$ref": "#/definitions/PublicationStatus"
@@ -6356,9 +5625,7 @@
         },
         "controllers.CreateReplyRequest": {
             "type": "object",
-            "required": [
-                "body"
-            ],
+            "required": ["body"],
             "properties": {
                 "body": {
                     "type": "string",
@@ -6368,11 +5635,7 @@
         },
         "controllers.CreateReportRequest": {
             "type": "object",
-            "required": [
-                "entity_id",
-                "entity_type",
-                "reason_id"
-            ],
+            "required": ["entity_id", "entity_type", "reason_id"],
             "properties": {
                 "details": {
                     "type": "string"
@@ -6382,15 +5645,7 @@
                 },
                 "entity_type": {
                     "type": "string",
-                    "enum": [
-                        "user",
-                        "manga",
-                        "author",
-                        "chapter",
-                        "scanlation_group",
-                        "thread",
-                        "reply"
-                    ]
+                    "enum": ["user", "manga", "author", "chapter", "scanlation_group", "thread", "reply"]
                 },
                 "reason_id": {
                     "type": "string"
@@ -6399,9 +5654,7 @@
         },
         "controllers.DeleteMangaRelationRequest": {
             "type": "object",
-            "required": [
-                "related_id"
-            ],
+            "required": ["related_id"],
             "properties": {
                 "related_id": {
                     "type": "string"
@@ -6427,9 +5680,7 @@
         },
         "controllers.UpdateAuthorRequest": {
             "type": "object",
-            "required": [
-                "version"
-            ],
+            "required": ["version"],
             "properties": {
                 "description": {
                     "type": "string",
@@ -6486,9 +5737,7 @@
         },
         "controllers.UpdateChapterRequest": {
             "type": "object",
-            "required": [
-                "version"
-            ],
+            "required": ["version"],
             "properties": {
                 "chapter": {
                     "type": "string",
@@ -6544,9 +5793,7 @@
         },
         "controllers.UpdateClientRequest": {
             "type": "object",
-            "required": [
-                "name"
-            ],
+            "required": ["name"],
             "properties": {
                 "name": {
                     "type": "string",
@@ -6557,9 +5804,7 @@
         },
         "controllers.UpdateCoverRequest": {
             "type": "object",
-            "required": [
-                "version"
-            ],
+            "required": ["version"],
             "properties": {
                 "description": {
                     "type": "string",
@@ -6587,9 +5832,7 @@
         },
         "controllers.UpdateGroupRequest": {
             "type": "object",
-            "required": [
-                "version"
-            ],
+            "required": ["version"],
             "properties": {
                 "contact_email": {
                     "type": "string",
@@ -6655,31 +5898,20 @@
         },
         "controllers.UpdateMangaFollowRequest": {
             "type": "object",
-            "required": [
-                "status"
-            ],
+            "required": ["status"],
             "properties": {
                 "notification": {
                     "type": "boolean"
                 },
                 "status": {
                     "type": "string",
-                    "enum": [
-                        "reading",
-                        "plan_to_read",
-                        "completed",
-                        "on_hold",
-                        "re_reading",
-                        "dropped"
-                    ]
+                    "enum": ["reading", "plan_to_read", "completed", "on_hold", "re_reading", "dropped"]
                 }
             }
         },
         "controllers.UpdateMangaRequest": {
             "type": "object",
-            "required": [
-                "version"
-            ],
+            "required": ["version"],
             "properties": {
                 "alt_titles": {
                     "type": "object",
@@ -6703,12 +5935,7 @@
                     }
                 },
                 "content_rating": {
-                    "enum": [
-                        "safe",
-                        "suggestive",
-                        "erotica",
-                        "pornographic"
-                    ],
+                    "enum": ["safe", "suggestive", "erotica", "pornographic"],
                     "allOf": [
                         {
                             "$ref": "#/definitions/ContentRating"
@@ -6716,13 +5943,7 @@
                     ]
                 },
                 "demographic": {
-                    "enum": [
-                        "shounen",
-                        "shoujo",
-                        "josei",
-                        "seinen",
-                        "none"
-                    ],
+                    "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
                     "allOf": [
                         {
                             "$ref": "#/definitions/Demographic"
@@ -6756,12 +5977,7 @@
                     }
                 },
                 "status": {
-                    "enum": [
-                        "ongoing",
-                        "completed",
-                        "hiatus",
-                        "cancelled"
-                    ],
+                    "enum": ["ongoing", "completed", "hiatus", "cancelled"],
                     "allOf": [
                         {
                             "$ref": "#/definitions/PublicationStatus"
@@ -6789,9 +6005,7 @@
         },
         "controllers.UpdateReplyRequest": {
             "type": "object",
-            "required": [
-                "version"
-            ],
+            "required": ["version"],
             "properties": {
                 "body": {
                     "type": "string",
@@ -6805,9 +6019,7 @@
         },
         "controllers.UpdateUserRequest": {
             "type": "object",
-            "required": [
-                "version"
-            ],
+            "required": ["version"],
             "properties": {
                 "description": {
                     "type": "string",
@@ -7089,18 +6301,8 @@
         },
         "ContentRating": {
             "type": "string",
-            "enum": [
-                "safe",
-                "suggestive",
-                "erotica",
-                "pornographic"
-            ],
-            "x-enum-varnames": [
-                "ContentRatingSafe",
-                "ContentRatingSuggestive",
-                "ContentRatingErotica",
-                "ContentRatingPornographic"
-            ]
+            "enum": ["safe", "suggestive", "erotica", "pornographic"],
+            "x-enum-varnames": ["ContentRatingSafe", "ContentRatingSuggestive", "ContentRatingErotica", "ContentRatingPornographic"]
         },
         "Cover": {
             "type": "object",
@@ -7150,16 +6352,8 @@
         },
         "Demographic": {
             "type": "string",
-            "enum": [
-                "shounen",
-                "shoujo",
-                "josei",
-                "seinen",
-                "none"
-            ],
-            "x-enum-varnames": [
-                "DemographicNone"
-            ]
+            "enum": ["shounen", "shoujo", "josei", "seinen", "none"],
+            "x-enum-varnames": ["DemographicNone"]
         },
         "File": {
             "type": "object",
@@ -7197,22 +6391,8 @@
         },
         "Group": {
             "type": "string",
-            "enum": [
-                "content",
-                "format",
-                "genre",
-                "theme",
-                "author",
-                "tag"
-            ],
-            "x-enum-varnames": [
-                "NamespaceContent",
-                "NamespaceFormat",
-                "NamespaceGenre",
-                "NamespaceTheme",
-                "NamespaceAuthor",
-                "NamespaceTag"
-            ]
+            "enum": ["content", "format", "genre", "theme", "author", "tag"],
+            "x-enum-varnames": ["NamespaceContent", "NamespaceFormat", "NamespaceGenre", "NamespaceTheme", "NamespaceAuthor", "NamespaceTag"]
         },
         "GroupFollow": {
             "type": "object",
@@ -7639,29 +6819,12 @@
         },
         "PublicationStatus": {
             "type": "string",
-            "enum": [
-                "ongoing",
-                "completed",
-                "hiatus",
-                "cancelled"
-            ],
-            "x-enum-varnames": [
-                "PublicationStatusOngoing",
-                "PublicationStatusCompleted",
-                "PublicationStatusHiatus",
-                "PublicationStatusCancelled"
-            ]
+            "enum": ["ongoing", "completed", "hiatus", "cancelled"],
+            "x-enum-varnames": ["PublicationStatusOngoing", "PublicationStatusCompleted", "PublicationStatusHiatus", "PublicationStatusCancelled"]
         },
         "ReadingStatus": {
             "type": "string",
-            "enum": [
-                "reading",
-                "plan_to_read",
-                "completed",
-                "on_hold",
-                "re_reading",
-                "dropped"
-            ],
+            "enum": ["reading", "plan_to_read", "completed", "on_hold", "re_reading", "dropped"],
             "x-enum-varnames": [
                 "ReadingStatusReading",
                 "ReadingStatusPlanToRead",
@@ -7960,18 +7123,8 @@
         },
         "ReportStatus": {
             "type": "string",
-            "enum": [
-                "refused",
-                "waiting",
-                "accepted",
-                "autoresolved"
-            ],
-            "x-enum-varnames": [
-                "ReportStatusRefused",
-                "ReportStatusWaiting",
-                "ReportStatusAccepted",
-                "ReportStatusAutoresolved"
-            ]
+            "enum": ["refused", "waiting", "accepted", "autoresolved"],
+            "x-enum-varnames": ["ReportStatusRefused", "ReportStatusWaiting", "ReportStatusAccepted", "ReportStatusAutoresolved"]
         },
         "ScanlationGroup": {
             "type": "object",
@@ -8392,14 +7545,7 @@
         },
         "public.ReadingStatus": {
             "type": "string",
-            "enum": [
-                "reading",
-                "plan_to_read",
-                "completed",
-                "on_hold",
-                "re_reading",
-                "dropped"
-            ],
+            "enum": ["reading", "plan_to_read", "completed", "on_hold", "re_reading", "dropped"],
             "x-enum-varnames": [
                 "ReadingStatusReading",
                 "ReadingStatusPlanToRead",

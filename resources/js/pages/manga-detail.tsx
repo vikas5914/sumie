@@ -299,32 +299,23 @@ export default function MangaDetail() {
                         <div className="mb-6 grid grid-cols-3 gap-px border border-border-dark bg-border-dark">
                             <div className="flex flex-col gap-1 bg-background-dark p-3 text-center transition-colors hover:bg-surface-dark">
                                 <span className="text-[10px] tracking-widest text-zinc-500 uppercase">Views</span>
-                                <Deferred
-                                    data="statistics"
-                                    fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}
-                                >
+                                <Deferred data="statistics" fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}>
                                     <span className="font-bold text-text-light">
-                                        {(((statistics?.total_views ?? manga.total_views) ?? 0) / 1000).toFixed(1)}K
+                                        {((statistics?.total_views ?? manga.total_views ?? 0) / 1000).toFixed(1)}K
                                     </span>
                                 </Deferred>
                             </div>
                             <div className="flex flex-col gap-1 bg-background-dark p-3 text-center transition-colors hover:bg-surface-dark">
                                 <span className="text-[10px] tracking-widest text-zinc-500 uppercase">Chapters</span>
-                                <Deferred
-                                    data="statistics"
-                                    fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}
-                                >
+                                <Deferred data="statistics" fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}>
                                     <span className="font-bold text-text-light">{statistics?.total_chapters ?? manga.total_chapters}</span>
                                 </Deferred>
                             </div>
                             <div className="flex flex-col gap-1 bg-background-dark p-3 text-center transition-colors hover:bg-surface-dark">
                                 <span className="text-[10px] tracking-widest text-zinc-500 uppercase">Follows</span>
-                                <Deferred
-                                    data="statistics"
-                                    fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}
-                                >
+                                <Deferred data="statistics" fallback={<span className="mx-auto h-5 w-14 animate-pulse rounded bg-surface-dark" />}>
                                     <span className="font-bold text-text-light">
-                                        {(((statistics?.follows_count ?? manga.rating_count) ?? 0) / 1000).toFixed(1)}K
+                                        {((statistics?.follows_count ?? manga.rating_count ?? 0) / 1000).toFixed(1)}K
                                     </span>
                                 </Deferred>
                             </div>

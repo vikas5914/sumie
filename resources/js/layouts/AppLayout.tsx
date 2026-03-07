@@ -29,7 +29,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden rounded-t-lg border-x border-border-dark pb-24">
                 {children}
 
-                <nav className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md bg-background-dark/95 backdrop-blur-sm" style={{ paddingBottom: 'var(--inset-bottom, 0px)' }}>
+                <nav
+                    className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md bg-background-dark/95 backdrop-blur-sm"
+                    style={{ paddingBottom: 'var(--inset-bottom, 0px)' }}
+                >
                     <div className="flex h-16 items-center justify-around border-t border-border-dark bg-background-dark/95 px-2 backdrop-blur-sm">
                         <Link
                             href={homePath}
@@ -67,9 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                 isActive(libraryPath) ? 'text-primary' : 'text-zinc-500 hover:text-text-light'
                             }`}
                         >
-                            {isActive(libraryPath) && (
-                                <div className="absolute top-0 h-[2px] w-14 bg-primary shadow-[0_0_8px_rgba(76,255,0,0.8)]" />
-                            )}
+                            {isActive(libraryPath) && <div className="absolute top-0 h-[2px] w-14 bg-primary shadow-[0_0_8px_rgba(76,255,0,0.8)]" />}
                             <AppIcon
                                 name="bookmarks"
                                 className={`text-[22px] ${!isActive(libraryPath) && 'transition-transform group-hover:-translate-y-1'}`}

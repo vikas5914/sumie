@@ -145,7 +145,10 @@ export default function MangaReader() {
                     </Deferred>
                 </main>
 
-                <footer className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md border-t border-border-dark bg-background-dark/95 backdrop-blur-sm" style={{ paddingBottom: 'var(--inset-bottom, 0px)' }}>
+                <footer
+                    className="fixed right-0 bottom-0 left-0 z-40 mx-auto max-w-md border-t border-border-dark bg-background-dark/95 backdrop-blur-sm"
+                    style={{ paddingBottom: 'var(--inset-bottom, 0px)' }}
+                >
                     <div className="flex w-full gap-2 px-4 py-3">
                         {navigation.previous_chapter_id ? (
                             <Link
