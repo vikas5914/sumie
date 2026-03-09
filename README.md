@@ -44,11 +44,11 @@
 ## Features
 
 - **Home Feed** — Featured manga, continue reading, trending titles, and personalized recommendations with pull-to-refresh
-- **Search** — Real-time search powered by [Weebdex API](https://api.weebdex.com) with status filters (Ongoing / Completed / Oneshot) and recent search history
+- **Search** — Real-time search powered by [Weebdex API](https://api.weebdex.org/docs) with status filters (Ongoing / Completed / Oneshot) and recent search history
 - **Personal Library** — Organize your collection with status tabs (Reading, Plan to Read, Completed, On Hold, Dropped), sort options, progress tracking, and favorites
 - **Manga Detail** — Cover art, metadata, chapter listings, bookmark toggle, and deferred prop loading for smooth UX
 - **Reader** — Vertical scroll and page-by-page reading modes with automatic progress tracking and chapter navigation
-- **Profile** — Avatar via [facehash](https://github.com/nicbarker/facehash), level system based on reading stats, and reading mode preferences
+- **Profile** — Avatar via [facehash](https://www.facehash.dev/), level system based on reading stats, and reading mode preferences
 - **Onboarding** — Simple name entry to create a local device-only user
 
 ## Architecture
@@ -197,4 +197,4 @@ tests/
 
 ## License
 
-This project is proprietary software. All rights reserved.
+This project is licensed under the [MIT License](LICENSE).
